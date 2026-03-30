@@ -1,0 +1,3154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GreenPulse 🌿 v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Kanit:wght@500;700;800&display=swap" rel="stylesheet">
+<!-- SheetJS for multi-sheet Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- JSZip for ZIP photo export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════════════ */
+:root{
+  --mint:#00c896;--mint2:#00a87a;--mint3:#e6fdf5;
+  --sky:#38bdf8;--sky2:#0ea5e9;--sky3:#e0f7ff;
+  --teal:#0d9488;
+  --bg:#f0fdf9;--bg2:#e6fdf5;
+  --card:#fff;
+  --border:#c8f0e0;--border2:#a7f3d0;
+  --text:#0f4c35;--text2:#166534;--muted:#6b9e89;--dim:#9dc5b5;
+  --red:#ef4444;--red2:#fee2e2;
+  --orange:#f97316;--orange2:#ffedd5;
+  --yellow:#eab308;--yellow2:#fef9c3;
+  --shadow:0 4px 20px rgba(0,200,150,.12);
+  --shadow2:0 2px 8px rgba(0,200,150,.07);
+  --radius:14px;--radius2:10px;--radius3:20px;
+  --CCH:#00c896;--CHBR:#38bdf8;--CWR:#f97316;
+  --sidebar-w:230px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-size:14px}
+body{font-family:'Nunito','Sarabun',sans-serif;background:var(--bg);color:var(--text)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ══ LAYOUT ══ */
+#app{height:100vh;display:flex;flex-direction:column}
+.layout{flex:1;display:flex;overflow:hidden}
+.sidebar{
+  width:var(--sidebar-w);background:#fff;border-right:2px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+  transition:transform .3s,width .3s;z-index:200;
+}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg)}
+.page-wrap{padding:20px;max-width:1100px;margin:0 auto;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:54px;background:#fff;border-bottom:2px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  flex-shrink:0;box-shadow:var(--shadow2);z-index:100;position:sticky;top:0;
+}
+.logo{display:flex;align-items:center;gap:8px;font-family:'Kanit',sans-serif;font-weight:800;font-size:17px;color:var(--mint);cursor:pointer;text-decoration:none}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--mint),var(--teal));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 8px rgba(0,200,150,.3)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tnav{display:flex;gap:3px;align-items:center}
+.tnav-btn{padding:6px 13px;border-radius:20px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:all .18s;white-space:nowrap}
+.tnav-btn:hover{background:var(--mint3);color:var(--mint)}
+.tnav-btn.act{background:linear-gradient(135deg,var(--mint),var(--teal));color:#fff;box-shadow:0 2px 8px rgba(0,200,150,.28)}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:all .18s;position:relative;flex-shrink:0}
+.icon-btn:hover{background:var(--mint3);border-color:var(--mint)}
+.notif-dot{position:absolute;top:3px;right:3px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid #fff}
+.user-chip{display:flex;align-items:center;gap:7px;padding:4px 12px;background:var(--bg2);border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:12px;font-weight:700}
+.user-chip:hover{background:var(--mint3);border-color:var(--mint)}
+.user-dot{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--mint),var(--teal));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.hamburger{display:none;background:none;border:none;font-size:20px;cursor:pointer;color:var(--mint);padding:4px}
+
+/* ══ SIDEBAR ══ */
+.s-head{padding:14px 12px 10px;border-bottom:1.5px solid var(--border)}
+.s-user-card{background:linear-gradient(135deg,var(--mint3),var(--sky3));border:1.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px}
+.s-user-init{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--mint),var(--teal));color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;font-family:'Kanit',sans-serif;flex-shrink:0}
+.s-user-name{font-size:12px;font-weight:800;color:var(--text)}
+.s-user-role{font-size:10px;color:var(--muted)}
+.s-stats{display:flex;gap:5px;margin-top:8px}
+.s-stat{flex:1;background:#fff;border-radius:8px;padding:4px 5px;text-align:center;border:1px solid var(--border)}
+.s-stat-v{font-size:13px;font-weight:800;font-family:'Kanit',sans-serif}
+.s-stat-l{font-size:9px;color:var(--muted)}
+.s-nav{padding:8px}
+.s-label{font-size:9px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:6px 8px 3px}
+.s-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:all .18s;color:var(--muted);font-size:12px;font-weight:600;user-select:none;position:relative}
+.s-item:hover{background:var(--mint3);color:var(--mint)}
+.s-item.act{background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(56,189,248,.07));color:var(--mint);font-weight:700}
+.s-item-ic{font-size:15px;width:20px;text-align:center}
+.s-badge{margin-left:auto;background:linear-gradient(135deg,var(--mint),var(--sky));color:#fff;font-size:9px;padding:2px 6px;border-radius:9px;font-weight:800}
+.s-red-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;padding:2px 6px;border-radius:9px;font-weight:800}
+.prop-selector{display:flex;gap:4px;padding:8px 12px;border-bottom:1.5px solid var(--border)}
+.prop-pill{flex:1;text-align:center;padding:4px 2px;border-radius:7px;font-size:10px;font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:all .18s}
+
+/* ══ CARDS ══ */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow2)}
+.card-sm{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius2);padding:14px;box-shadow:var(--shadow2);transition:all .18s}
+.card-sm:hover{border-color:var(--mint);transform:translateY(-2px);box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+
+/* ══ STAT CARDS ══ */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius2);padding:14px;text-align:center;position:relative;overflow:hidden}
+.stat-val{font-size:22px;font-weight:800;font-family:'Kanit',sans-serif}
+.stat-lbl{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.stat-bar{position:absolute;bottom:0;left:0;right:0;height:3px}
+
+/* ══ INPUTS & FORMS ══ */
+.inp{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:9px 13px;border-radius:10px;font-family:inherit;font-size:13px;width:100%;outline:none;transition:border-color .18s}
+.inp:focus{border-color:var(--mint);box-shadow:0 0 0 3px rgba(0,200,150,.1)}
+.inp option{background:#fff}
+.form-g{margin-bottom:13px}
+.form-lbl{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+
+/* ══ BUTTONS ══ */
+.btn{border:none;padding:8px 16px;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;font-size:12px;transition:all .18s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--mint),var(--teal));color:#fff;box-shadow:0 3px 10px rgba(0,200,150,.25)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,200,150,.35)}
+.btn-sky{background:linear-gradient(135deg,var(--sky),var(--sky2));color:#fff}
+.btn-outline{background:#fff;color:var(--mint);border:1.5px solid var(--mint)}
+.btn-ghost{background:var(--mint3);color:var(--mint);font-weight:700}
+.btn-ghost:hover{background:rgba(0,200,150,.15)}
+.btn-danger{background:var(--red2);color:var(--red);border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:8px}
+.btn-xs{padding:3px 8px;font-size:10px;border-radius:6px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:8px}
+
+/* ══ TAGS & BADGES ══ */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.tg{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.ty{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
+.tr{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.tb{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.ts{background:#e0f7ff;color:#0369a1;border:1px solid #bae6fd}
+.tm{background:rgba(0,200,150,.1);color:var(--mint2);border:1px solid rgba(0,200,150,.25)}
+.to{background:#ffedd5;color:#9a3412;border:1px solid #fed7aa}
+.prop-tag{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:800;display:inline-flex;align-items:center}
+.prop-CCH{background:rgba(0,200,150,.1);color:var(--mint2);border:1px solid rgba(0,200,150,.3)}
+.prop-CHBR{background:rgba(56,189,248,.1);color:var(--sky2);border:1px solid rgba(56,189,248,.3)}
+.prop-CWR{background:rgba(249,115,22,.1);color:#9a3412;border:1px solid rgba(249,115,22,.3)}
+.prop-all{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+
+/* ══ PROGRESS ══ */
+.prog{height:7px;background:var(--bg2);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.prog-fill{height:100%;border-radius:10px;transition:width .9s ease}
+
+/* ══ TABS & CHIPS ══ */
+.tab-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.tab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:all .18s}
+.tab:hover{border-color:var(--mint);color:var(--mint)}
+.tab.act{background:linear-gradient(135deg,var(--mint),var(--teal));color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(0,200,150,.22)}
+.chip-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:all .18s}
+.chip.act{background:linear-gradient(135deg,var(--sky),var(--sky2));color:#fff;border-color:transparent}
+
+/* ══ TABLE ══ */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1.5px solid var(--border)}
+table{width:100%;border-collapse:collapse;background:#fff;min-width:500px}
+th{background:linear-gradient(135deg,rgba(0,200,150,.06),rgba(56,189,248,.03));padding:9px 12px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);border-bottom:1.5px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid var(--bg2);font-size:12px;vertical-align:middle}
+tr:hover td{background:rgba(0,200,150,.02)}
+tr:last-child td{border-bottom:none}
+.chk-col{width:36px;text-align:center}
+input[type="checkbox"]{accent-color:var(--mint);width:14px;height:14px;cursor:pointer}
+
+/* ══ MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,60,40,.4);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:14px}
+.modal{background:#fff;border:2px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,100,60,.18)}
+.modal.modal-wide{max-width:680px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--bg2)}
+.modal-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:800;color:var(--text)}
+.modal-x{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);transition:all .18s}
+.modal-x:hover{background:var(--red2);border-color:var(--red);color:var(--red)}
+
+/* ══ ALERTS ══ */
+.alert-info{background:var(--sky3);border:1.5px solid rgba(56,189,248,.3);border-radius:10px;padding:9px 13px;font-size:12px;color:var(--sky2);margin-bottom:12px}
+.alert-warn{background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:9px 13px;font-size:12px;color:#92400e;margin-bottom:12px}
+.tip-box{background:linear-gradient(135deg,rgba(0,200,150,.07),rgba(56,189,248,.04));border:1.5px solid var(--border2);border-radius:10px;padding:9px 13px;font-size:11px;color:var(--text2);margin-bottom:10px}
+
+/* ══ PAGE HEADER ══ */
+.ph{margin-bottom:18px}
+.ph-row{display:flex;align-items:center;gap:11px}
+.ph-ic{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--mint3),var(--sky3));border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ph-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:800;color:var(--text)}
+.ph-sub{font-size:11px;color:var(--muted);margin-top:2px;margin-left:51px}
+.back-row{display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.back-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;font-family:inherit}
+.back-btn:hover{border-color:var(--mint);color:var(--mint);background:var(--mint3)}
+.back-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+
+/* ══ EMPTY STATE ══ */
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty-ic{font-size:36px;margin-bottom:8px}
+
+/* ══ PHOTO UPLOAD ══ */
+.photo-drop{border:2px dashed var(--border2);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg2)}
+.photo-drop:hover{border-color:var(--mint);background:var(--mint3)}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px;margin-top:9px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;border:1.5px solid var(--border)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-rm{position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(239,68,68,.9);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#fff;font-weight:800}
+
+/* ══ MISSION CARDS ══ */
+.mission-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:15px;transition:all .18s;position:relative;overflow:hidden}
+.mission-card:hover{border-color:var(--mint);transform:translateY(-2px);box-shadow:var(--shadow)}
+.mc-top-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.mc-pts{font-family:'Kanit',sans-serif;font-size:18px;font-weight:800;color:var(--mint)}
+.mc-title{font-size:12px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:4px;padding-top:4px}
+.mc-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:9px}
+.mc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px}
+.mc-status{padding:7px;border-radius:8px;text-align:center;font-weight:700;font-size:11px}
+
+/* ══ LEADERBOARD ══ */
+.lb-podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin-bottom:20px;padding:10px 0}
+.lb-pod{text-align:center;cursor:default}
+.lb-bar{display:flex;align-items:flex-start;justify-content:center;padding-top:10px;border-radius:8px 8px 0 0}
+.lb-row[data-staffdetail]:not(.lb-row-me):hover{background:var(--mint3);border-radius:9px;margin:-2px -10px;padding-left:10px!important;padding-right:10px!important;}
+
+/* ══ FIREBASE STATUS ══ */
+.fb-status{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid}
+.fb-connected{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.fb-local{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+.fb-error{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.fb-dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
+.fb-dot-on{background:#22c55e}
+.fb-dot-off{background:#eab308}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ DOWNLOAD SELECTOR ══ */
+.dl-selector{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.dl-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.dl-row:last-child{border-bottom:none}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  :root{--sidebar-w:240px}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);box-shadow:4px 0 20px rgba(0,0,0,.15)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199;display:none}
+  .sidebar-overlay.show{display:block}
+  .hamburger{display:flex}
+  .tnav{display:none}
+  .page-wrap{padding:14px}
+  .form-row{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .lb-podium{gap:5px}
+  table{min-width:420px}
+}
+@media(max-width:400px){
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 10px}
+}
+
+/* ══ MISC ══ */
+.divider{height:1px;background:var(--bg2);margin:10px 0}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:11px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+.mission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:13px}
+.initials{display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-weight:800;font-family:'Kanit',sans-serif;background:linear-gradient(135deg,var(--mint),var(--teal));color:#fff;flex-shrink:0}
+.saving-toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 18px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="saving-toast" id="savingToast" style="opacity:0;transform:translateY(10px)"></div>
+<input type="file" id="photoInputGlobal" accept="image/*" multiple style="display:none">
+<input type="file" id="importCsvInput" accept=".csv" style="display:none">
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   🔥 FIREBASE REALTIME DATABASE — CROSS-DEVICE SYNC
+   ──────────────────────────────────────────────────────────
+   ✅ Real-time sync across ALL devices (phone ↔ computer)
+   ✅ Data persists forever in the cloud
+   ✅ Works offline, syncs when back online
+   
+   SETUP: Edit FIREBASE_CONFIG below with your project values.
+   Get them from: https://console.firebase.google.com
+   → Your project → Project Settings → Your apps → Config
+══════════════════════════════════════════════════════════ */
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBWDVRvBWlj4GESTY2KC54DqZMueNl22c0",
+  authDomain:        "greenpulse-app-19121.firebaseapp.com",
+  databaseURL:       "https://greenpulse-app-19121-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "greenpulse-app-19121",
+  storageBucket:     "greenpulse-app-19121.firebasestorage.app",
+  messagingSenderId: "56204538944",
+  appId:             "1:56204538944:web:393415b05ddd23f91d9ba5"
+};
+
+// ── Detect if Firebase config has been filled in ──
+const FIREBASE_READY = !FIREBASE_CONFIG.apiKey.includes('REPLACE_WITH');
+
+const STORAGE_KEY = 'gp_v3_data';
+const PHOTO_KEY   = 'gp_v3_photos';
+let _firebaseDB   = null;
+let _bc           = null;
+try { _bc = new BroadcastChannel('greenpulse_sync'); } catch(e) {}
+
+// ── Update the status badge in the topbar (called after init) ──
+function updateFbStatusBadge(connected) {
+  const badge = document.getElementById('fbStatusBadge');
+  const dot   = document.getElementById('fbStatusDot');
+  const text  = document.getElementById('fbStatusText');
+  if (!badge) return;
+  if (connected) {
+    badge.className = 'fb-status fb-connected';
+    badge.title = '🔥 Firebase Realtime Database — sync ทุกอุปกรณ์';
+    dot.className = 'fb-dot fb-dot-on';
+    text.textContent = '🔥 Live Sync';
+  } else {
+    badge.className = 'fb-status fb-local';
+    badge.title = '💾 Local Storage — ใช้งานได้บนเครื่องนี้เท่านั้น';
+    dot.className = 'fb-dot fb-dot-off';
+    text.textContent = '💾 Local Save';
+  }
+}
+
+// ── Bootstrap Firebase SDK dynamically ──
+async function initFirebase() {
+  if (!FIREBASE_READY) {
+    console.warn('[GreenPulse] Firebase config not set — using localStorage');
+    return false;
+  }
+  try {
+    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    _firebaseDB = firebase.database();
+    // Sign in anonymously so Firebase Rules (auth != null) are satisfied
+    try {
+      await firebase.auth().signInAnonymously();
+      console.log('[GreenPulse] ✅ Firebase Auth: signed in anonymously');
+    } catch(authErr) {
+      console.warn('[GreenPulse] Anonymous auth failed (check Firebase console → Authentication → Enable Anonymous):', authErr.message);
+    }
+    // Quick connection test — write to .info/connected
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Connection timeout after 8s')), 8000);
+      _firebaseDB.ref('.info/connected').once('value', snap => {
+        clearTimeout(timeout);
+        if (snap.val() === true) {
+          console.log('[GreenPulse] 🔥 Firebase Realtime DB connected!');
+          resolve(true);
+        } else {
+          // Firebase loaded but offline — still try, will sync when online
+          console.warn('[GreenPulse] Firebase loaded but currently offline — will sync when online');
+          resolve(true);
+        }
+      }, err => { clearTimeout(timeout); reject(err); });
+    });
+    return true;
+  } catch(e) {
+    console.error('[GreenPulse] ❌ Firebase init failed:', e.message);
+    console.error('→ Check: 1) databaseURL is correct  2) Rules allow read/write  3) Internet connection');
+    return false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ── Unified FB interface (Firebase OR localStorage fallback) ──
+const FB = {
+  _useFirebase: false,
+  _remoteListenerOff: null,
+  _connListenerOff: null,
+  _reconnectTimer: null,
+  _retryCount: 0,
+  _maxRetry: 8,
+  _deviceId: 'dev_' + Math.random().toString(36).slice(2, 10), // unique per tab/device
+  _offlineQueue: null, // pending save when offline
+  _isOnline: true,
+
+  async init() {
+    this._useFirebase = await initFirebase();
+    updateFbStatusBadge(this._useFirebase);
+    if (this._useFirebase) {
+      this._attachListener();
+      this._monitorConnection();
+    } else {
+      // Same-browser tab sync via BroadcastChannel
+      if (_bc) _bc.onmessage = async (ev) => {
+        if (ev.data?.type === 'sync') {
+          await loadPersistedData();
+          if (S.currentUser) render();
+        }
+      };
+    }
+  },
+
+  // ── Attach real-time listener with error callback & reconnect ──
+  _attachListener() {
+    // Detach previous listener if any
+    if (this._remoteListenerOff) {
+      try { _firebaseDB.ref('greenpulse/data').off('value', this._remoteListenerOff); } catch(e) {}
+      this._remoteListenerOff = null;
+    }
+    S._fbStatus = 'loading';
+    const ref = _firebaseDB.ref('greenpulse/data');
+    this._remoteListenerOff = ref.on(
+      'value',
+      snap => {
+        // SUCCESS — reset retry counter
+        this._retryCount = 0;
+        clearTimeout(this._reconnectTimer);
+        const wasError = S._fbStatus !== 'ok';
+        S._fbStatus = 'ok';
+        updateFbStatusBadge(true);
+        const remote = snap.val();
+        if (!remote || !remote.users) return;
+        // Use device-unique ID to skip our own echo, not timestamp (timestamp skip breaks multi-device)
+        if (remote._savedBy && remote._savedBy === FB._deviceId && Date.now() - remote._updatedAt < 3000) return;
+        S._lastSaveTs = remote._updatedAt || 0;
+        // Always apply remote data — Firebase is the single source of truth
+        const prevUserId = S.currentUser?.id;
+        const prevPage = S.page;
+        const prevModal = S.modal;
+        Object.assign(S, remote);
+        // Restore local-only state
+        S.page = prevPage;
+        S.modal = prevModal;
+        // Restore photos from local store for any submission missing them
+        S.submissions = (S.submissions||[]).map(sub=>{
+          if(!sub.photos || sub.photos.length===0){
+            const stored = FB.getPhotos(sub.id);
+            if(stored.length>0) return {...sub, photos:stored};
+          }
+          return sub;
+        });
+        if (prevUserId) {
+          const fresh = S.users.find(u => u.id === prevUserId);
+          if (fresh) S.currentUser = { ...S.currentUser, ...fresh };
+          render();
+        } else if (wasError) {
+          render(); // re-render to remove error banner
+        }
+      },
+      err => {
+        // ERROR — listener failed, schedule reconnect
+        console.warn('[GreenPulse] Listener error:', err.code, '— will reconnect');
+        S._fbStatus = 'error';
+        updateFbStatusBadge(false);
+        this._scheduleReconnect();
+      }
+    );
+  },
+
+  // ── Monitor .info/connected — detects network-level disconnect ──
+  _monitorConnection() {
+    if (this._connListenerOff) {
+      try { _firebaseDB.ref('.info/connected').off('value', this._connListenerOff); } catch(e) {}
+    }
+    this._connListenerOff = _firebaseDB.ref('.info/connected').on('value', snap => {
+      const online = snap.val() === true;
+      if (online) {
+        this._isOnline = true;
+        // Back online — reattach data listener if it was dropped
+        if (S._fbStatus === 'error' || S._fbStatus === 'disconnected') {
+          console.log('[GreenPulse] Reconnected — reattaching listener');
+          this._retryCount = 0;
+          clearTimeout(this._reconnectTimer);
+          this._attachListener();
+        }
+        // Flush any saves that failed while offline
+        this._flushQueue();
+        S._fbStatus = 'ok';
+        updateFbStatusBadge(true);
+        if (S.currentUser && (S.page === 'admin')) render();
+      } else {
+        console.warn('[GreenPulse] Firebase disconnected');
+        S._fbStatus = 'disconnected';
+        updateFbStatusBadge(false);
+        this._scheduleReconnect();
+        if (S.currentUser && (S.page === 'admin')) render();
+      }
+    });
+  },
+
+  // ── Exponential backoff reconnect ──
+  _scheduleReconnect() {
+    clearTimeout(this._reconnectTimer);
+    if (this._retryCount >= this._maxRetry) {
+      console.error('[GreenPulse] Max reconnect attempts reached');
+      return;
+    }
+    const delay = Math.min(1000 * Math.pow(2, this._retryCount), 30000); // max 30s
+    this._retryCount++;
+    console.log(`[GreenPulse] Reconnect attempt ${this._retryCount} in ${delay}ms`);
+    this._reconnectTimer = setTimeout(() => {
+      if (this._useFirebase && _firebaseDB) this._attachListener();
+    }, delay);
+  },
+
+  async set(path, data) {
+    if (this._useFirebase) {
+      try {
+        await _firebaseDB.ref(path).set(data);
+        // If there was a queued save, it's now written — clear queue
+        this._offlineQueue = null;
+      } catch(e) {
+        console.warn('[Firebase] set failed, saving locally + queuing:', e.message);
+        this._localSet(path, data);
+        // Queue for retry when back online
+        this._offlineQueue = { path, data };
+      }
+    } else {
+      this._localSet(path, data);
+      try { _bc?.postMessage({ type: 'sync', path, ts: Date.now() }); } catch(e) {}
+    }
+  },
+
+  // Flush queued save after coming back online
+  async _flushQueue() {
+    if (!this._offlineQueue) return;
+    try {
+      const { path, data } = this._offlineQueue;
+      await _firebaseDB.ref(path).set(data);
+      this._offlineQueue = null;
+      console.log('[GreenPulse] ✅ Offline queue flushed');
+    } catch(e) {
+      console.warn('[GreenPulse] Queue flush failed:', e.message);
+    }
+  },
+
+  async get(path) {
+    if (this._useFirebase) {
+      try {
+        const snap = await _firebaseDB.ref(path).get();
+        return snap.exists() ? snap.val() : null;
+      } catch(e) {
+        return this._localGet(path);
+      }
+    }
+    return this._localGet(path);
+  },
+
+  // Photo storage always stays local (base64 too large for Firebase free tier)
+  savePhotos(subId, photos) {
+    try {
+      const all = JSON.parse(localStorage.getItem(PHOTO_KEY) || '{}');
+      all[subId] = photos;
+      localStorage.setItem(PHOTO_KEY, JSON.stringify(all));
+    } catch(e) { console.warn('[Photos] Storage full:', e.name); }
+  },
+
+  getPhotos(subId) {
+    try {
+      return JSON.parse(localStorage.getItem(PHOTO_KEY) || '{}')[subId] || [];
+    } catch(e) { return []; }
+  },
+
+  getAllPhotos() {
+    try { return JSON.parse(localStorage.getItem(PHOTO_KEY) || '{}'); } catch(e) { return {}; }
+  },
+
+  // Export full snapshot as JSON file
+  exportSnapshot() {
+    const data   = this._localGetAll();
+    const photos = this.getAllPhotos();
+    const blob   = new Blob([JSON.stringify({ data, photos, exportedAt: new Date().toISOString() })],
+                            { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'greenpulse_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+  },
+
+  // Import snapshot from JSON file (any device)
+  async importSnapshot(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = async e => {
+        try {
+          const { data, photos } = JSON.parse(e.target.result);
+          if (photos) localStorage.setItem(PHOTO_KEY, JSON.stringify(photos));
+          if (data) {
+            if (this._useFirebase) {
+              await _firebaseDB.ref('greenpulse/data').set(data);
+            } else {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({ 'greenpulse/data': data }));
+            }
+          }
+          resolve(true);
+        } catch(err) { reject(err); }
+      };
+      r.readAsText(file);
+    });
+  },
+
+  // ── Local storage helpers ──
+  _localGetAll() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  },
+  _localGet(path) {
+    const full = this._localGetAll();
+    return path.split('/').reduce((o, k) => (o && o[k] !== undefined ? o[k] : null), full);
+  },
+  _localSet(path, data) {
+    const full = this._localGetAll();
+    const parts = path.split('/');
+    let obj = full;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!obj[parts[i]]) obj[parts[i]] = {};
+      obj = obj[parts[i]];
+    }
+    obj[parts[parts.length - 1]] = data;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(full)); } catch(e) {}
+  },
+};
+
+/* ══════════════════════════════════════════════════════════
+   DEFAULT DATA
+══════════════════════════════════════════════════════════ */
+const DEFAULT = {
+  users:[
+    {id:'u1',username:'superadmin',password:'admin123',name:'Super Admin',role:'admin1',property:'all',dept:'Management',points:0,badges:[],streak:0,active:true,teamId:null},
+    {id:'u2',username:'admin.cch',password:'cch123',name:'Admin CCH',role:'admin2',property:'CCH',dept:'Back of House',points:1240,badges:['Energy Saver'],streak:12,active:true,teamId:'t1'},
+    {id:'u3',username:'admin.chbr',password:'chbr123',name:'Admin CHBR',role:'admin2',property:'CHBR',dept:'Back of House',points:900,badges:[],streak:8,active:true,teamId:'t2'},
+    {id:'u4',username:'admin.cwr',password:'cwr123',name:'Admin CWR',role:'admin2',property:'CWR',dept:'Back of House',points:1100,badges:[],streak:5,active:true,teamId:'t3'},
+    {id:'u5',username:'staff.cch1',password:'1234',name:'Wira Mankhong',role:'staff',property:'CCH',dept:'Back of House',points:980,badges:['Early Bird'],streak:7,active:true,teamId:'t1'},
+    {id:'u6',username:'staff.cch2',password:'1234',name:'Aoy Sawatdi',role:'staff',property:'CCH',dept:'Engineering',points:720,badges:[],streak:4,active:true,teamId:'t1'},
+    {id:'u7',username:'staff.chbr1',password:'1234',name:'Mali Raksalok',role:'staff',property:'CHBR',dept:'Back of House',points:1560,badges:['Green Hero'],streak:20,active:true,teamId:'t2'},
+    {id:'u8',username:'staff.chbr2',password:'1234',name:'Thana Phalang',role:'staff',property:'CHBR',dept:'Engineering',points:720,badges:[],streak:3,active:true,teamId:'t2'},
+    {id:'u9',username:'staff.cwr1',password:'1234',name:'Supha Jaidee',role:'staff',property:'CWR',dept:'Back of House',points:2100,badges:['MVP','Green Hero'],streak:30,active:true,teamId:'t3'},
+    {id:'u10',username:'staff.cwr2',password:'1234',name:'Kamol Raksalok',role:'staff',property:'CWR',dept:'Back of House',points:850,badges:[],streak:9,active:true,teamId:'t3'},
+    {id:'u11',username:'wasitthee',password:'1234',name:'Wasitthee Sakduang',role:'staff',property:'CCH',dept:'HR',points:0,badges:[],streak:0,active:true,teamId:null},
+  ],
+  teams:[
+    {id:'t1',name:'BOH Team CCH',property:'CCH',depts:['Back of House','Engineering'],memberIds:['u2','u5','u6'],points:2940,streak:8},
+    {id:'t2',name:'BOH Team CHBR',property:'CHBR',depts:['Back of House','Engineering'],memberIds:['u3','u7','u8'],points:3180,streak:12},
+    {id:'t3',name:'BOH Team CWR',property:'CWR',depts:['Back of House'],memberIds:['u4','u9','u10'],points:4050,streak:22},
+  ],
+  departments:[
+    {id:'d1',name:'Back of House',property:'CCH'},{id:'d2',name:'Engineering',property:'CCH'},{id:'d3',name:'HR',property:'CCH'},
+    {id:'d4',name:'Back of House',property:'CHBR'},{id:'d5',name:'Engineering',property:'CHBR'},{id:'d6',name:'F&B',property:'CHBR'},
+    {id:'d7',name:'Back of House',property:'CWR'},{id:'d8',name:'Engineering',property:'CWR'},{id:'d9',name:'Housekeeping',property:'CWR'},
+  ],
+  missions:[
+    {id:'m1',code:'WK-CCH-01',title:'ปิดไฟห้อง BOH เมื่อไม่ใช้งาน',titleEn:'Turn off BOH lights',desc:'ตรวจสอบและปิดไฟ BOH ทุกห้องที่ไม่มีคนใช้',descEn:'Check and turn off all BOH lights when unoccupied.',points:50,type:'individual',period:'weekly',difficulty:'easy',tip:'ตรวจรอบเช้าและเย็น',property:'CCH',status:'active',deadline:'2026-04-06',submissionsPerPeriod:1},
+    {id:'m2',code:'WK-CCH-02',title:'ปิดแอร์หลังประชุม',titleEn:'Turn off AC after meetings',desc:'ปิดแอร์ทันทีหลังประชุม ตั้ง 25°C',descEn:'Turn off AC immediately after meetings.',points:75,type:'individual',period:'weekly',difficulty:'easy',tip:'ติดป้ายที่สวิตช์',property:'CCH',status:'active',deadline:'2026-04-06',submissionsPerPeriod:1},
+    {id:'m3',code:'MO-CCH-03',title:'บันทึกค่าไฟรายเดือน',titleEn:'Log electricity meter monthly',desc:'อ่านมิเตอร์ไฟฟ้า BOH ทุกเดือน เปรียบเทียบกับเดือนก่อน',descEn:'Read and log electricity meter monthly.',points:175,type:'individual',period:'monthly',difficulty:'medium',tip:'ถ่ายรูปมิเตอร์ด้วย',property:'CCH',status:'active',deadline:'2026-04-30',submissionsPerPeriod:4},
+    {id:'m4',code:'WK-CHBR-01',title:'ล็อคอุณหภูมิแอร์ 25°C',titleEn:'Lock AC at 25C',desc:'ตรวจสอบแอร์ทุกเครื่องให้อยู่ที่ 25°C',descEn:'Verify all AC units set to 25C.',points:75,type:'individual',period:'weekly',difficulty:'easy',tip:'ทำทุกเช้า 09:00',property:'CHBR',status:'active',deadline:'2026-04-06',submissionsPerPeriod:1},
+    {id:'m5',code:'MO-CHBR-02',title:'ลดการพิมพ์เอกสาร',titleEn:'Reduce printing - Paperless',desc:'ลดการพิมพ์ 50% ใช้ไฟล์ดิจิทัล',descEn:'Reduce printing 50% using digital files.',points:150,type:'individual',period:'monthly',difficulty:'medium',tip:'ใช้ Google Drive แทน',property:'CHBR',status:'active',deadline:'2026-04-30',submissionsPerPeriod:4},
+    {id:'m6',code:'WK-CWR-01',title:'ปิดคอมพิวเตอร์เมื่อเลิกงาน',titleEn:'Shut down computers after shift',desc:'ปิดคอมและจอภาพทุกเครื่องเมื่อสิ้นกะ',descEn:'Shut down all computers and monitors at end of shift.',points:50,type:'individual',period:'weekly',difficulty:'easy',tip:'รวม stand-by monitors',property:'CWR',status:'active',deadline:'2026-04-06',submissionsPerPeriod:1},
+    {id:'m7',code:'WK-ALL-01',title:'รณรงค์ประหยัดพลังงานทีม',titleEn:'Team Energy Campaign',desc:'จัดกิจกรรมรณรงค์อย่างน้อย 1 ครั้ง/สัปดาห์',descEn:'Organize team energy-saving activity once per week.',points:250,type:'team',period:'weekly',difficulty:'hard',tip:'Morning Briefing หัวข้อพลังงาน',property:'all',status:'active',deadline:'2026-04-06',submissionsPerPeriod:1},
+    {id:'m8',code:'MO-ALL-02',title:'ติดป้ายเตือนประหยัดพลังงาน',titleEn:'Place energy-saving signs',desc:'ติดป้ายบริเวณสวิตช์ไฟ แอร์ และปลั๊ก',descEn:'Place energy-saving signs near switches, AC, outlets.',points:100,type:'team',period:'monthly',difficulty:'easy',tip:'ดาวน์โหลด Template ป้ายจาก Admin',property:'all',status:'active',deadline:'2026-04-30',submissionsPerPeriod:4},
+  ],
+  submissions:[
+    {id:'s1',userId:'u5',missionId:'m1',status:'approved',submittedAt:'2026-03-20',note:'ปิดไฟครบทุกห้อง',adminNote:'ดีมาก!',photos:[],teamId:null,property:'CCH'},
+    {id:'s2',userId:'u7',missionId:'m4',status:'pending',submittedAt:'2026-03-22',note:'ส่งรูปห้อง BOH',adminNote:'',photos:[],teamId:null,property:'CHBR'},
+    {id:'s3',userId:'u9',missionId:'m5',status:'approved',submittedAt:'2026-03-18',note:'Paperless 100%',adminNote:'',photos:[],teamId:null,property:'CWR'},
+    {id:'s4',userId:'u8',missionId:'m4',status:'rejected',submittedAt:'2026-03-19',note:'',adminNote:'รูปไม่ชัด',photos:[],teamId:null,property:'CHBR'},
+    {id:'s5',userId:null,missionId:'m7',status:'pending',submittedAt:'2026-03-24',note:'จัด Briefing ทีมแล้ว',adminNote:'',photos:[],teamId:'t1',property:'CCH'},
+  ],
+  notifications:[
+    {id:'n1',userId:'u5',msg:'ภารกิจ "ปิดไฟห้อง BOH" ผ่านแล้ว! +50 pts',msgEn:'Mission approved! +50 pts',read:false,time:'2026-03-20'},
+    {id:'n2',userId:'u8',msg:'ภารกิจถูกปฏิเสธ กรุณาส่งใหม่',msgEn:'Mission rejected. Resubmit.',read:false,time:'2026-03-19'},
+  ],
+};
+
+/* ══════════════════════════════════════════════════════════
+   STATE MANAGER
+══════════════════════════════════════════════════════════ */
+const PROP_COLORS = {CCH:'#00c896',CHBR:'#38bdf8',CWR:'#f97316'};
+const DIFF_COLOR = {easy:'#00c896',medium:'#eab308',hard:'#ef4444'};
+const PERIOD_COLOR = {weekly:'#00c896',monthly:'#38bdf8'};
+
+let S = {
+  lang:'th', page:'login', prevPages:[], currentUser:null,
+  modal:null, sideOpen:false, _modalOpenTime:0,
+  adminTab:'submissions', lbTab:'individual',
+  missionTab:'weekly', missionType:'all',
+  reportPeriod:'all', reportProp:'all',
+  reportDateFrom:'', reportDateTo:'',
+  reportTeamFilter:'all', reportUserFilter:'all',
+  loginTab:'login',
+  _subFilter:'pending', _superPropFilter:'all',
+  _dlSelected:{},
+  _fbStatus:'loading',
+  _lastSaveTs: 0,
+  users:[], teams:[], departments:[], missions:[], submissions:[], notifications:[], deptLogs:[],
+};
+
+const T={
+  th:{
+    login:'เข้าสู่ระบบ',username:'ชื่อผู้ใช้',password:'รหัสผ่าน',loginBtn:'เข้าสู่ระบบ',
+    dashboard:'แดชบอร์ด',missions:'ภารกิจ',leaderboard:'อันดับ',teams:'ทีม',
+    reports:'รายงาน',profile:'โปรไฟล์',admin:'จัดการ',logout:'ออก',
+    notifications:'การแจ้งเตือน',submit:'ส่งงาน',approved:'ผ่านแล้ว',pending:'รอตรวจ',rejected:'ไม่ผ่าน',
+    points:'คะแนน',streak:'วันต่อเนื่อง',badges:'รางวัล',submitProof:'ส่งหลักฐาน',
+    weekly:'รายสัปดาห์',monthly:'รายเดือน',all:'ทั้งหมด',individual:'ส่วนตัว',team:'ทีม',
+    role_admin1:'Super Admin',role_admin2:'Property Admin',role_staff:'พนักงาน',
+    review:'ตรวจงาน',manageUsers:'พนักงาน',manageTeams:'ทีม',manageDepts:'แผนก',
+    deadline:'กำหนดส่ง',note:'หมายเหตุ',noNotif:'ไม่มีการแจ้งเตือน',
+    save:'บันทึก',edit:'แก้ไข',delete:'ลบ',add:'เพิ่ม',cancel:'ยกเลิก',confirm:'ยืนยัน',
+    name:'ชื่อ',property:'สาขา',dept:'แผนก',role:'บทบาท',active:'ใช้งาน',inactive:'ปิด',
+    back:'ย้อนกลับ',home:'หน้าหลัก',markRead:'อ่านทั้งหมด',
+    myRank:'อันดับของฉัน',teamRank:'อันดับทีม',
+    downloadExcel:'ดาวน์โหลด Excel',downloadPhotos:'ดาวน์โหลด Photos (ZIP)',
+    selectData:'เลือกข้อมูลที่ต้องการ',
+    attachPhoto:'แนบรูปภาพ',photoReq:'กรุณาแนบรูปอย่างน้อย 1 รูป',
+    subPerPeriod:'ส่งได้ (ครั้ง/ช่วง)',saving:'กำลังบันทึก...',saved:'บันทึกแล้ว ✓',
+    fbConnected:'Firebase เชื่อมต่อแล้ว',fbLocal:'บันทึกแบบ Local',
+    staffTemplate:'ดาวน์โหลด Template',importStaff:'Import พนักงาน',
+    approveBtn:'✅ อนุมัติ',rejectBtn:'❌ ปฏิเสธ',
+  },
+  en:{
+    login:'Login',username:'Username',password:'Password',loginBtn:'Sign In',
+    dashboard:'Dashboard',missions:'Missions',leaderboard:'Leaderboard',teams:'Teams',
+    reports:'Reports',profile:'Profile',admin:'Admin',logout:'Logout',
+    notifications:'Notifications',submit:'Submit',approved:'Approved',pending:'Pending',rejected:'Rejected',
+    points:'Points',streak:'Streak',badges:'Badges',submitProof:'Submit Proof',
+    weekly:'Weekly',monthly:'Monthly',all:'All',individual:'Individual',team:'Team',
+    role_admin1:'Super Admin',role_admin2:'Property Admin',role_staff:'Staff',
+    review:'Review',manageUsers:'Staff',manageTeams:'Teams',manageDepts:'Depts',
+    deadline:'Deadline',note:'Note',noNotif:'No notifications',
+    save:'Save',edit:'Edit',delete:'Delete',add:'Add',cancel:'Cancel',confirm:'Confirm',
+    name:'Name',property:'Property',dept:'Department',role:'Role',active:'Active',inactive:'Inactive',
+    back:'Back',home:'Home',markRead:'Mark all read',
+    myRank:'My Ranking',teamRank:'Team Ranking',
+    downloadExcel:'Download Excel',downloadPhotos:'Download Photos (ZIP)',
+    selectData:'Select data to export',
+    attachPhoto:'Attach photos',photoReq:'Please attach at least 1 photo',
+    subPerPeriod:'Submissions per period',saving:'Saving...',saved:'Saved ✓',
+    fbConnected:'Firebase Connected',fbLocal:'Local Storage Mode',
+    staffTemplate:'Download Template',importStaff:'Import Staff',
+    approveBtn:'✅ Approve',rejectBtn:'❌ Reject',
+  }
+};
+
+function t(k){return T[S.lang][k]||k;}
+function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,7);}
+
+function addExtMemberRow(name, dept) {
+  const list = document.getElementById('ext-member-list');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.className = 'ext-m-row';
+  row.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:6px';
+
+  const nameInput = document.createElement('input');
+  nameInput.className = 'inp ext-m-name';
+  nameInput.placeholder = 'ชื่อ-นามสกุล';
+  nameInput.value = name || '';
+  nameInput.style.cssText = 'flex:2;font-size:12px;padding:6px 10px';
+
+  const deptInput = document.createElement('input');
+  deptInput.className = 'inp ext-m-dept';
+  deptInput.placeholder = 'แผนก/ตำแหน่ง';
+  deptInput.value = dept || '';
+  deptInput.style.cssText = 'flex:1.5;font-size:12px;padding:6px 10px';
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '×';
+  delBtn.style.cssText = 'width:28px;height:28px;border-radius:7px;border:1.5px solid #fecaca;background:#fee2e2;color:var(--red);cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center';
+  delBtn.onclick = (e) => { e.stopPropagation(); row.remove(); };
+
+  row.appendChild(nameInput);
+  row.appendChild(deptInput);
+  row.appendChild(delBtn);
+  list.appendChild(row);
+  nameInput.focus();
+}
+
+/* ══════════════════════════════════════════════════════════
+   PERSISTENCE LAYER
+══════════════════════════════════════════════════════════ */
+let _saveTimer=null;
+let _pendingSave=false;
+function schedSave(immediate=false){
+  clearTimeout(_saveTimer);
+  _pendingSave=true;
+  showSavingToast();
+  const delay = immediate ? 0 : 800;
+  _saveTimer=setTimeout(async()=>{
+    _pendingSave=false;
+    await persistAll();
+    showSavedToast();
+  }, delay);
+}
+
+// Save immediately before page unload (prevents data loss on tab close)
+window.addEventListener('beforeunload', ()=>{
+  if(_pendingSave && S.currentUser){
+    // Sync save attempt using sendBeacon as fallback
+    const ts=Date.now();
+    const data={users:S.users,teams:S.teams,departments:S.departments,missions:S.missions,
+      submissions:S.submissions,notifications:S.notifications,deptLogs:S.deptLogs||[],
+      _updatedAt:ts,_savedBy:FB._deviceId};
+    // Always write to localStorage as backup
+    try{
+      const bk=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+      bk['greenpulse/data']=data;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(bk));
+    }catch(e){}
+  }
+});
+
+async function persistAll(){
+  const ts = Date.now();
+  const data={
+    users:S.users,teams:S.teams,departments:S.departments,
+    missions:S.missions,submissions:S.submissions,notifications:S.notifications,
+    deptLogs:S.deptLogs||[],
+    _updatedAt: ts,
+    _savedBy: FB._deviceId, // used to skip echo on THIS device only
+  };
+  S._lastSaveTs = ts; // mark so listener skips this echo
+  await FB.set('greenpulse/data',data);
+  // Backup to localStorage always (offline safety net)
+  try {
+    const bk = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    bk['greenpulse/data'] = data;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bk));
+  } catch(e) {}
+}
+
+async function loadPersistedData(){
+  S._fbStatus = FB._useFirebase ? 'loading' : 'ok';
+  try {
+    // Try localStorage first for instant load (zero-wait), then Firebase will update via listener
+    const localBk = FB._localGet('greenpulse/data');
+    if(localBk && localBk.users && localBk.users.length > 0){
+      Object.assign(S, localBk);
+      S.deptLogs = localBk.deptLogs || [];
+    }
+
+    // Now fetch from Firebase (authoritative source)
+    const saved = await FB.get('greenpulse/data');
+    const best = (saved && saved._updatedAt && (!localBk || (saved._updatedAt > (localBk._updatedAt||0)))) ? saved : localBk;
+    if(best && best.users && best.users.length>0){
+      // Merge: use saved as base, add any DEFAULT users not present (by id)
+      const mergedUsers = [...best.users];
+      DEFAULT.users.forEach(du => {
+        if (!mergedUsers.find(u => u.id === du.id)) mergedUsers.push(du);
+      });
+      // Merge departments too
+      const mergedDepts = [...(best.departments||[])];
+      DEFAULT.departments.forEach(dd => {
+        if (!mergedDepts.find(d => d.id === dd.id)) mergedDepts.push(dd);
+      });
+      Object.assign(S, best);
+      S.users = mergedUsers;
+      S.departments = mergedDepts;
+      S.deptLogs = best.deptLogs || [];
+      S.submissions = (S.submissions||[]).map(sub=>{
+        if(!sub.photos || sub.photos.length===0){
+          const stored = FB.getPhotos(sub.id);
+          if(stored.length>0) return {...sub, photos:stored};
+        }
+        return sub;
+      });
+      // If we added any missing data, push back to Firebase
+      if(mergedUsers.length > best.users.length || mergedDepts.length > (best.departments||[]).length){
+        await persistAll();
+      }
+    } else {
+      Object.assign(S, JSON.parse(JSON.stringify(DEFAULT)));
+      await persistAll();
+    }
+    S._fbStatus = 'ok';
+  } catch(e) {
+    console.warn('[GreenPulse] loadPersistedData failed:', e.message);
+    // Fall back to DEFAULT so app is usable offline
+    if (!S.users || S.users.length === 0) {
+      Object.assign(S, JSON.parse(JSON.stringify(DEFAULT)));
+    }
+    S._fbStatus = 'error';
+  }
+}
+
+function showSavingToast(){
+  const el=document.getElementById('savingToast');
+  if(el){el.innerHTML='⏳ '+t('saving');el.style.opacity='1';el.style.transform='translateY(0)';}
+}
+function showSavedToast(){
+  const el=document.getElementById('savingToast');
+  if(el){
+    el.innerHTML='✅ '+t('saved');
+    setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1200);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER ENGINE
+══════════════════════════════════════════════════════════ */
+function setState(patch, noSave=false){
+  if(patch.modal && patch.modal!==null) S._modalOpenTime=Date.now()+200; // extra buffer
+  Object.assign(S,patch);
+  if(!noSave && S.currentUser){
+    const dataKeys=['users','teams','departments','missions','submissions','notifications','deptLogs'];
+    if(dataKeys.some(k=>k in patch)){
+      // Immediate localStorage backup so data never lost on quick tab close
+      try{
+        const ts=Date.now();
+        const bk=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+        bk['greenpulse/data']={users:S.users,teams:S.teams,departments:S.departments,
+          missions:S.missions,submissions:S.submissions,notifications:S.notifications,
+          deptLogs:S.deptLogs||[],_updatedAt:ts,_savedBy:FB._deviceId};
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(bk));
+      }catch(e){}
+      schedSave();
+    }
+  }
+  render();
+}
+
+function navTo(page){
+  if(S.page!==page){ S.prevPages=[...S.prevPages.slice(-9),S.page]; }
+  setState({page,sideOpen:false,modal:null},true);
+}
+function navBack(){
+  if(S.prevPages.length>0){
+    const p=S.prevPages[S.prevPages.length-1];
+    S.prevPages=S.prevPages.slice(0,-1);
+    setState({page:p},true);
+  }
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(!S.currentUser){app.innerHTML=renderLogin();bindAll();return;}
+  const u=S.currentUser;
+  const unread=S.notifications.filter(n=>!n.read&&n.userId===u.id).length;
+  const isAdmin=u.role==='admin1'||u.role==='admin2';
+  const isSuper=u.role==='admin1';
+  // Build nav for topbar
+  const topNavItems = isAdmin
+    ? [['dashboard','📊',t('dashboard')],['missions','🎯',t('missions')],['leaderboard','🏆',t('leaderboard')],['reports','📈',t('reports')],['admin','⚙️',t('admin')],['profile','👤',t('profile')]]
+    : [['dashboard','📊',t('dashboard')],['missions','🎯',t('missions')],['leaderboard','🏆',t('leaderboard')],['profile','👤',t('profile')]];
+  // Sidebar nav (teams only for staff, profile always last)
+  const sideNavItemsExtra=isAdmin?[]:[ ['teams','👥',t('teams')] ];
+  const sideNavItems=[...topNavItems,...sideNavItemsExtra];
+
+  const initials=u.name.split(' ').map(w=>w[0]?.toUpperCase()||'').slice(0,2).join('');
+  const pc=PROP_COLORS[u.property]||'#00c896';
+  const propLabel=isSuper?'Super Admin':(u.property||'—');
+
+  app.innerHTML=`
+  <div class="topbar">
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <a class="logo" onclick="navTo('dashboard')">
+      <div class="logo-mark">🌿</div>
+      <span>GreenPulse</span>
+    </a>
+    <nav class="tnav">
+      ${topNavItems.map(([k,ic,l])=>`<button class="tnav-btn ${S.page===k?'act':''}" data-nav="${k}">${ic} ${l}</button>`).join('')}
+      <button class="tnav-btn ${S.page==='notifications'?'act':''}" data-nav="notifications">🔔${unread>0?` <span style="background:var(--red);color:#fff;border-radius:9px;font-size:9px;padding:1px 5px">${unread}</span>`:''}</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="fb-status" id="fbStatusBadge" title="กำลังเชื่อมต่อ..." style="cursor:help">
+        <div class="fb-dot fb-dot-off" id="fbStatusDot"></div>
+        <span id="fbStatusText">⏳ กำลังเชื่อมต่อ...</span>
+      </div>
+      <div style="display:flex;gap:4px">
+        ${['th','en'].map(l=>`<button data-lang="${l}" style="padding:4px 9px;border-radius:8px;border:1.5px solid ${S.lang===l?'var(--mint)':'var(--border)'};background:${S.lang===l?'var(--mint3)':'#fff'};color:${S.lang===l?'var(--mint)':'var(--muted)'};font-weight:800;font-size:10px;cursor:pointer;font-family:inherit">${l.toUpperCase()}</button>`).join('')}
+      </div>
+      <div class="user-chip" data-nav="profile">
+        <div class="user-dot" style="background:linear-gradient(135deg,${pc},${pc}cc)">${initials||'?'}</div>
+        <div>
+          <div>${u.name.split(' ')[0]}</div>
+          <div style="font-size:9px;color:var(--muted)">${propLabel}</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-action="logout">🚪</button>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="sidebar ${S.sideOpen?'open':''}" id="sidebar">
+      <div class="s-head">
+        <div class="s-user-card">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
+            <div class="s-user-init" style="width:38px;height:38px;font-size:14px;background:linear-gradient(135deg,${pc},${pc}bb)">${initials||'?'}</div>
+            <div><div class="s-user-name">${u.name}</div><div class="s-user-role" style="color:${pc}">${propLabel} • ${t('role_'+u.role)}</div></div>
+          </div>
+          <div class="s-stats">
+            <div class="s-stat"><div class="s-stat-v" style="color:var(--mint)">${u.points.toLocaleString()}</div><div class="s-stat-l">pts</div></div>
+            <div class="s-stat"><div class="s-stat-v" style="color:var(--orange)">🔥${u.streak}</div><div class="s-stat-l">day</div></div>
+          </div>
+        </div>
+        ${isSuper?`<div style="padding:4px 0">
+          <div class="s-stat-l" style="padding-left:2px;margin-bottom:4px">View Property:</div>
+          <div class="prop-selector" style="padding:0;border:none;gap:4px">
+            ${['all','CCH','CHBR','CWR'].map(p=>`<div class="prop-pill" data-superprop="${p}" style="background:${(PROP_COLORS[p]||'#94a3b8')}${S._superPropFilter===p?'22':'0d'};border-color:${S._superPropFilter===p?(PROP_COLORS[p]||'#64748b'):'transparent'};color:${S._superPropFilter===p?(PROP_COLORS[p]||'#334155'):'var(--muted)'}">${p}</div>`).join('')}
+          </div>
+        </div>`:''}
+      </div>
+      <div class="s-nav">
+        ${sideNavItems.map(([k,ic,l])=>`<div class="s-item ${S.page===k?'act':''}" data-nav="${k}"><span class="s-item-ic">${ic}</span>${l}</div>`).join('')}
+        <div class="s-item ${S.page==='notifications'?'act':''}" data-nav="notifications">
+          <span class="s-item-ic">🔔</span>${t('notifications')}
+          ${unread>0?`<span class="s-red-badge">${unread}</span>`:''}
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="padding:8px">
+        <div class="s-item" data-action="exportSnapshot" title="ส่งออกข้อมูลไปอุปกรณ์อื่น"><span class="s-item-ic">📤</span><span style="font-size:11px">ส่งออกข้อมูล</span></div>
+        <label class="s-item" style="cursor:pointer" title="นำเข้าข้อมูลจากอุปกรณ์อื่น">
+          <span class="s-item-ic">📥</span><span style="font-size:11px">นำเข้าข้อมูล</span>
+          <input type="file" id="importSnapshotFile" accept=".json" style="display:none">
+        </label>
+        <div class="s-item" data-action="logout" style="color:var(--red)"><span class="s-item-ic">🚪</span>${t('logout')}</div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="page-wrap">
+        <div class="back-row">
+          <button class="back-btn" ${S.prevPages.length===0?'disabled':''} data-action="back">⬅ ${t('back')}</button>
+          <button class="back-btn" data-action="home">🏠 ${t('home')}</button>
+        </div>
+        ${renderPage()}
+      </div>
+    </main>
+  </div>
+  ${S.modal?renderModal():''}`;
+  bindAll();
+  // Re-apply Firebase status badge (survives re-renders)
+  updateFbStatusBadge(FB._useFirebase);
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOGIN PAGE
+══════════════════════════════════════════════════════════ */
+function renderLogin(){
+  const isReg=S.loginTab==='register';
+  const loginForm=`
+    <div class="form-g"><label class="form-lbl">🙂 ${t('username')}</label><input class="inp" id="loginUser" autocomplete="username" placeholder="${t('username')}"></div>
+    <div class="form-g"><label class="form-lbl">🔒 ${t('password')}</label><input class="inp" type="password" id="loginPw" autocomplete="current-password" placeholder="${t('password')}"></div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;border-radius:12px;justify-content:center" data-action="login">🌿 ${t('loginBtn')}</button>
+    <div style="text-align:center;margin-top:14px">
+      <span style="font-size:12px;color:var(--muted)">ยังไม่มีบัญชี?</span>
+      <button data-action="goRegister" style="background:none;border:none;color:var(--mint);font-weight:800;font-size:12px;cursor:pointer;margin-left:5px;font-family:inherit">ลงทะเบียน →</button>
+    </div>`;
+
+  const registerForm=`
+    <div class="form-row">
+      <div class="form-g"><label class="form-lbl">👤 ชื่อ-นามสกุล (EN)</label><input class="inp" id="regName" placeholder="John Smith"></div>
+      <div class="form-g"><label class="form-lbl">🔖 ชื่อผู้ใช้</label><input class="inp" id="regUser" placeholder="john.smith" autocomplete="new-password"></div>
+      <div class="form-g"><label class="form-lbl">🔒 รหัสผ่าน</label><input class="inp" type="password" id="regPw" placeholder="อย่างน้อย 4 ตัวอักษร"></div>
+      <div class="form-g"><label class="form-lbl">🔒 ยืนยันรหัสผ่าน</label><input class="inp" type="password" id="regPw2" placeholder="ยืนยันอีกครั้ง"></div>
+      <div class="form-g"><label class="form-lbl">🏨 สาขา</label>
+        <select class="inp" id="regProp">
+          ${['CCH','CHBR','CWR'].map(p=>`<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-g"><label class="form-lbl">🏢 แผนก</label>
+        <select class="inp" id="regDept">
+          ${[...new Set([...S.departments.map(d=>d.name),'Back of House','Engineering','HR','F&B','Housekeeping','Front Office'])].map(d=>`<option>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-g" style="grid-column:1/-1">
+        <label class="form-lbl">สมัครแบบ</label>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;display:flex;align-items:center;gap:7px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:#fff;font-size:12px;font-weight:600" id="reg-type-ind">
+            <input type="radio" name="regType" value="individual" checked style="accent-color:var(--mint)"> 👤 แบบเดี่ยว
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:7px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:#fff;font-size:12px;font-weight:600" id="reg-type-team">
+            <input type="radio" name="regType" value="team" style="accent-color:var(--mint)"> 👥 แบบทีม
+          </label>
+        </div>
+      </div>
+      <div class="form-g" id="regTeamField" style="grid-column:1/-1;display:none">
+        <label class="form-lbl">👥 เลือกทีม (ถ้ามี)</label>
+        <select class="inp" id="regTeam">
+          <option value="">— ยังไม่เลือกทีม —</option>
+          ${S.teams.map(tm=>`<option value="${tm.id}">${tm.name} (${tm.property})</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;border-radius:12px;justify-content:center" data-action="register">✅ ลงทะเบียน</button>
+    <div style="text-align:center;margin-top:14px">
+      <span style="font-size:12px;color:var(--muted)">มีบัญชีแล้ว?</span>
+      <button data-action="goLogin" style="background:none;border:none;color:var(--mint);font-weight:800;font-size:12px;cursor:pointer;margin-left:5px;font-family:inherit">← เข้าสู่ระบบ</button>
+    </div>`;
+
+  return `<div style="min-height:100vh;background:linear-gradient(135deg,#ecfdf5,#e0f7ff,#f0fdf4);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto">
+    <div style="width:100%;max-width:420px">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--mint),var(--teal));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(0,200,150,.35)">🌿</div>
+        <div style="font-family:'Kanit',sans-serif;font-size:26px;font-weight:800;color:var(--mint)">GreenPulse</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">Energy Saving Mission Platform v3</div>
+        <div style="display:flex;justify-content:center;gap:7px;margin-top:10px">
+          ${['CCH','CHBR','CWR'].map(p=>`<span class="prop-tag prop-${p}">${p}</span>`).join('')}
+        </div>
+      </div>
+      <!-- Tab switcher -->
+      <div style="display:flex;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:4px;margin-bottom:14px;gap:4px">
+        <button data-action="goLogin" style="flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:13px;transition:all .18s;background:${!isReg?'linear-gradient(135deg,var(--mint),var(--teal))':'transparent'};color:${!isReg?'#fff':'var(--muted)'}">🔑 เข้าสู่ระบบ</button>
+        <button data-action="goRegister" style="flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:13px;transition:all .18s;background:${isReg?'linear-gradient(135deg,var(--mint),var(--teal))':'transparent'};color:${isReg?'#fff':'var(--muted)'}">📝 ลงทะเบียน</button>
+      </div>
+      <div class="card" style="border-radius:20px;padding:24px">
+        ${isReg?registerForm:loginForm}
+      </div>
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:13px">
+        ${['th','en'].map(l=>`<button data-lang="${l}" style="padding:5px 14px;border-radius:9px;border:1.5px solid ${S.lang===l?'var(--mint)':'var(--border)'};background:${S.lang===l?'var(--mint3)':'#fff'};color:${S.lang===l?'var(--mint)':'var(--muted)'};font-weight:800;font-size:12px;cursor:pointer;font-family:inherit">${l.toUpperCase()}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE ROUTER
+══════════════════════════════════════════════════════════ */
+function renderPage(){
+  switch(S.page){
+    case 'dashboard': return S.currentUser.role==='staff'?renderStaffDash():renderAdminDash();
+    case 'missions': return renderMissions();
+    case 'leaderboard': return renderLeaderboard();
+    case 'teams': return renderTeams();
+    case 'reports': return renderReports();
+    case 'profile': return renderProfile();
+    case 'admin': return renderAdmin();
+    case 'notifications': return renderNotifications();
+    default: return S.currentUser.role==='staff'?renderStaffDash():renderAdminDash();
+  }
+}
+
+// ── helpers ──
+function propColor(p){return PROP_COLORS[p]||'#94a3b8';}
+function propTag(p){
+  if(!p||p==='all') return `<span class="prop-tag prop-all">All</span>`;
+  return `<span class="prop-tag prop-${p}">${p}</span>`;
+}
+function isAdmin(){return S.currentUser&&(S.currentUser.role==='admin1'||S.currentUser.role==='admin2');}
+function isSuper(){return S.currentUser&&S.currentUser.role==='admin1';}
+function initials(name){return (name||'').split(' ').map(w=>w[0]?.toUpperCase()||'').slice(0,2).join('')||'?';}
+function userInitDiv(u,size=30,fs=12){
+  const pc=propColor(u?.property);
+  return `<div class="initials" style="width:${size}px;height:${size}px;font-size:${fs}px;background:linear-gradient(135deg,${pc},${pc}cc)">${initials(u?.name)}</div>`;
+}
+
+// ── effective prop filter ──
+function effectiveProp(){
+  if(isSuper()) return S._superPropFilter==='all'?null:S._superPropFilter;
+  if(S.currentUser.role==='admin2') return S.currentUser.property;
+  return S.currentUser.property;
+}
+
+function visibleMissions(){
+  const ep=effectiveProp();
+  return S.missions.filter(m=>!ep||m.property===ep||m.property==='all');
+}
+function visibleUsers(){
+  const ep=effectiveProp();
+  return ep?S.users.filter(u=>u.property===ep||u.property==='all'):S.users;
+}
+function visibleTeams(){
+  const ep=effectiveProp();
+  return ep?S.teams.filter(t=>t.property===ep):S.teams;
+}
+function visibleSubs(){
+  const ep=effectiveProp();
+  if(!ep) return S.submissions;
+  return S.submissions.filter(s=>{
+    if(s.property) return s.property===ep;
+    if(s.teamId){const tm=S.teams.find(t=>t.id===s.teamId);return tm?.property===ep;}
+    const su=S.users.find(u=>u.id===s.userId);return su?.property===ep;
+  });
+}
+function visibleDepts(){
+  const ep=effectiveProp();
+  return ep?S.departments.filter(d=>d.property===ep):S.departments;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DASHBOARD — STAFF
+══════════════════════════════════════════════════════════ */
+function renderStaffDash(){
+  const u=S.currentUser;
+  const mySubs=S.submissions.filter(s=>s.userId===u.id);
+  const approved=mySubs.filter(s=>s.status==='approved').length;
+  const pending=mySubs.filter(s=>s.status==='pending').length;
+  const myTeam=S.teams.find(t=>t.id===u.teamId);
+  const propUsers=[...S.users].filter(x=>x.property===u.property&&x.role==='staff').sort((a,b)=>b.points-a.points);
+  const myRank=propUsers.findIndex(x=>x.id===u.id)+1;
+  const propTeams=[...S.teams].filter(t=>t.property===u.property).sort((a,b)=>b.points-a.points);
+  const teamRank=myTeam?propTeams.findIndex(t=>t.id===myTeam.id)+1:'-';
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">📊</div><div><div class="ph-title">${t('dashboard')}</div></div></div>
+    <div class="ph-sub">ยินดีต้อนรับ ${u.name} • ${u.property} — ${u.dept}</div></div>
+    <div class="stat-grid">
+      ${[['⭐',u.points.toLocaleString(),t('points'),'var(--mint)'],['🔥',u.streak,t('streak'),'var(--orange)'],['✅',approved,'สำเร็จ','var(--teal)'],['⏳',pending,'รอตรวจ','var(--yellow)']].map(([ic,v,l,c])=>`
+        <div class="stat-card"><div style="font-size:22px;margin-bottom:4px">${ic}</div><div class="stat-val" style="color:${c}">${v}</div><div class="stat-lbl">${l}</div><div class="stat-bar" style="background:${c}"></div></div>`).join('')}
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">🏆 ${t('myRank')} — ${u.property}</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--mint),var(--teal));display:flex;align-items:center;justify-content:center;flex-shrink:0;flex-direction:column">
+              <div style="font-size:22px;font-weight:900;color:#fff;font-family:'Kanit',sans-serif;line-height:1">${myRank}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.8);margin-top:1px">${myRank<=3?['🥇','🥈','🥉'][myRank-1]:''}</div>
+            </div>
+          <div><div style="font-size:26px;font-weight:800;font-family:'Kanit',sans-serif;color:var(--mint)">#${myRank}</div><div style="font-size:11px;color:var(--muted)">จาก ${propUsers.length} คน ใน ${u.property}</div></div>
+        </div>
+        ${propUsers.slice(0,5).map((uu,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px ${uu.id===u.id?'8px':'0'};border-bottom:1px solid var(--bg2);${uu.id===u.id?'background:var(--mint3);border-radius:8px;margin:2px -8px;':''}">
+          <div style="width:22px;height:22px;border-radius:50%;background:${['#fef3c7','#f3f4f6','#fef3c7'][i]||'var(--bg2)'};color:${['#d97706','#6b7280','#92400e'][i]||'var(--muted)'};font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+          ${userInitDiv(uu,26,10)}
+          <span style="flex:1;font-size:11px;font-weight:${uu.id===u.id?800:600}">${uu.name}${uu.id===u.id?' 👈':''}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--mint)">${uu.points.toLocaleString()}</span>
+        </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title">👥 ${t('teamRank')} — ${u.property}</div>
+        ${myTeam?`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--sky),var(--sky2));display:flex;align-items:center;justify-content:center;flex-direction:column">
+              <div style="font-size:22px;font-weight:900;color:#fff;font-family:'Kanit',sans-serif;line-height:1">${teamRank}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.8);margin-top:1px">${teamRank<=3?['🥇','🥈','🥉'][teamRank-1]:''}</div>
+            </div>
+          <div><div style="font-size:13px;font-weight:800">${myTeam.name}</div><div style="font-size:26px;font-weight:800;font-family:'Kanit',sans-serif;color:var(--sky2)">#${teamRank}</div></div>
+        </div>`:'<div class="empty"><div class="empty-ic">👥</div>ยังไม่ได้อยู่ในทีม</div>'}
+        ${propTeams.map((tm,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px ${myTeam&&tm.id===myTeam.id?'8px':'0'};border-bottom:1px solid var(--bg2);${myTeam&&tm.id===myTeam.id?'background:rgba(56,189,248,.06);border-radius:8px;margin:2px -8px;':''}">
+          <span style="font-size:13px;width:20px;text-align:center">${i<3?'🥇🥈🥉'[i]:`#${i+1}`}</span>
+          <span style="flex:1;font-size:12px;font-weight:${myTeam&&tm.id===myTeam.id?800:600}">${tm.name}${myTeam&&tm.id===myTeam.id?' 👈':''}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--sky2)">${tm.points.toLocaleString()}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DASHBOARD — ADMIN
+══════════════════════════════════════════════════════════ */
+function renderAdminDash(){
+  const vSubs=visibleSubs();
+  const vUsers=visibleUsers().filter(u=>u.role==='staff');
+  const ep=effectiveProp();
+  const approved=vSubs.filter(s=>s.status==='approved').length;
+  const pending=vSubs.filter(s=>s.status==='pending').length;
+  const topUsers=[...vUsers].sort((a,b)=>b.points-a.points).slice(0,5);
+  const pendingSubs=vSubs.filter(s=>s.status==='pending').slice(0,5);
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">📊</div><div><div class="ph-title">${t('dashboard')}</div></div></div>
+    <div class="ph-sub">${isSuper()&&!ep?'Central Area — All Properties':(ep||S.currentUser.property)+' Dashboard'}</div></div>
+    <div class="stat-grid">
+      ${[['🎯',visibleMissions().length,'ภารกิจ','var(--mint)'],['✅',approved,'สำเร็จ','var(--teal)'],['⏳',pending,'รอตรวจ','var(--yellow)'],['👤',vUsers.filter(x=>x.active).length,'พนักงาน','var(--sky2)']].map(([ic,v,l,c])=>`
+        <div class="stat-card"><div style="font-size:22px;margin-bottom:4px">${ic}</div><div class="stat-val" style="color:${c}">${v}</div><div class="stat-lbl">${l}</div><div class="stat-bar" style="background:${c}"></div></div>`).join('')}
+    </div>
+    ${isSuper()&&!ep?`<div class="card" style="margin-bottom:16px">
+      <div class="card-title">🏨 Overview</div>
+      <div class="g3">
+        ${['CCH','CHBR','CWR'].map(pid=>{
+          const pSubs=S.submissions.filter(s=>s.property===pid||(S.users.find(x=>x.id===s.userId)?.property===pid));
+          const pct=pSubs.length?Math.round((pSubs.filter(s=>s.status==='approved').length/pSubs.length)*100):0;
+          const pc=propColor(pid);
+          return `<div style="background:${pc}0d;border:1.5px solid ${pc}30;border-radius:12px;padding:13px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-size:16px;font-weight:800;color:${pc};font-family:'Kanit',sans-serif">${pid}</div>
+              <div style="font-size:20px;font-weight:800;color:${pct>=70?'var(--mint)':pct>=40?'var(--yellow)':'var(--red)'};font-family:'Kanit',sans-serif">${pct}%</div>
+            </div>
+            <div class="prog" style="margin-bottom:6px"><div class="prog-fill" style="width:${pct}%;background:${pc}"></div></div>
+            <div style="font-size:10px;color:var(--muted)">✅ ${pSubs.filter(s=>s.status==='approved').length} / 👤 ${S.users.filter(u=>u.property===pid&&u.active).length} คน</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">🏆 Top Staff</div>
+        ${topUsers.map((uu,i)=>{
+          const rankColors=['#d97706','#6b7280','#92400e'];
+          const rankBg=['#fef3c7','#f3f4f6','#fef3c7'];
+          const rankNum=['1','2','3'];
+          return `<div data-staffdetail="${uu.id}" style="display:flex;align-items:center;gap:9px;padding:8px;border-bottom:1px solid var(--bg2);cursor:pointer;border-radius:8px;transition:background .15s;margin:0 -8px" onmouseover="this.style.background='var(--mint3)'" onmouseout="this.style.background=''">
+            <div style="width:24px;height:24px;border-radius:50%;background:${i<3?rankBg[i]:'var(--bg2)'};color:${i<3?rankColors[i]:'var(--muted)'};font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:${i===0?'1.5px solid #d97706':i===1?'1.5px solid #9ca3af':i===2?'1.5px solid #92400e':'1px solid var(--border)'}">${i<3?rankNum[i]:`${i+1}`}</div>
+            ${userInitDiv(uu,28,11)}
+            <div style="flex:1"><div style="font-size:11px;font-weight:700">${uu.name}</div>${propTag(uu.property)}</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="font-size:13px;font-weight:800;color:var(--mint)">${uu.points.toLocaleString()}</div><span style="font-size:12px;color:var(--muted)">›</span></div>
+          </div>`;
+        }).join('')}
+        ${topUsers.length===0?`<div class="empty"><div class="empty-ic">👤</div>ไม่มีข้อมูล</div>`:''}
+      </div>
+      <div class="card">
+        <div class="card-title">📋 งานรอตรวจ (${pending})</div>
+        ${pendingSubs.map(sub=>{
+          const uu=S.users.find(x=>x.id===sub.userId);
+          const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+          const m=S.missions.find(x=>x.id===sub.missionId);
+          return `<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bg2)">
+            ${userInitDiv(uu,26,10)}
+            <div style="flex:1"><div style="font-size:11px;font-weight:700">${tm?tm.name:uu?.name}</div><div style="font-size:10px;color:var(--muted)">${S.lang==='th'?m?.title:m?.titleEn}</div></div>
+            ${propTag(tm?tm.property:uu?.property)}
+          </div>`;
+        }).join('')}
+        ${pending===0?`<div class="empty"><div class="empty-ic">✅</div>ไม่มีงานค้าง</div>`:''}
+        ${pending>0?`<button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:9px" data-nav="admin">ตรวจงานทั้งหมด →</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MISSIONS
+══════════════════════════════════════════════════════════ */
+function renderMissions(){
+  const u=S.currentUser;
+  const mySubs=S.submissions.filter(s=>s.userId===u.id);
+  const myTeamSubs=u.teamId?S.submissions.filter(s=>s.teamId===u.teamId):[];
+  const missions=visibleMissions().filter(m=>{
+    if(S.missionTab!=='all'&&m.period!==S.missionTab) return false;
+    if(S.missionType==='individual'&&m.type!=='individual') return false;
+    if(S.missionType==='team'&&m.type!=='team') return false;
+    return true;
+  });
+  const getStatus=(mId,isTeam)=>isTeam&&u.teamId?myTeamSubs.find(s=>s.missionId===mId)?.status:mySubs.find(s=>s.missionId===mId)?.status;
+  const getSubCount=(mId,isTeam)=>isTeam&&u.teamId?myTeamSubs.filter(s=>s.missionId===mId).length:mySubs.filter(s=>s.missionId===mId).length;
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">🎯</div><div><div class="ph-title">${t('missions')}</div></div></div>
+    <div class="ph-sub">${missions.length} ภารกิจ • ${S.currentUser.property==='all'?'All Properties':S.currentUser.property}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px;align-items:center">
+      <div class="tab-row" style="margin-bottom:0">
+        ${[['all',t('all')],['weekly','📆 '+t('weekly')],['monthly','📅 '+t('monthly')]].map(([k,l])=>`<button class="tab ${S.missionTab===k?'act':''}" data-mtab="${k}">${l}</button>`).join('')}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        ${[['all',t('all')],['individual','👤'],['team','👥']].map(([k,l])=>`<button class="chip ${S.missionType===k?'act':''}" data-mtype="${k}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="mission-grid">
+      ${missions.map(m=>{
+        const isTeam=m.type==='team';
+        const status=getStatus(m.id,isTeam);
+        const subCount=getSubCount(m.id,isTeam);
+        const maxSubs=m.submissionsPerPeriod||1;
+        const dc=DIFF_COLOR[m.difficulty]||'var(--mint)';
+        const pc2=PERIOD_COLOR[m.period]||'var(--mint)';
+        const canAdd=!status||status==='rejected'||(m.period==='monthly'&&subCount<maxSubs&&status==='approved');
+        return `<div class="mission-card">
+          <div class="mc-top-bar" style="background:${pc2}"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:4px">
+            <div style="display:flex;gap:7px;flex:1">
+              <div style="width:28px;height:28px;background:${pc2}18;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${isTeam?'👥':'👤'}</div>
+              <div>
+                <div class="mc-title">${S.lang==='th'?m.title:m.titleEn}</div>
+                <div style="font-size:9px;color:var(--muted)">${m.code} • ${propTag(m.property)}</div>
+              </div>
+            </div>
+            <div class="mc-pts">+${m.points}</div>
+          </div>
+          <div class="mc-desc">${S.lang==='th'?m.desc:m.descEn}</div>
+          <div class="mc-tags">
+            <span class="tag" style="background:${dc}18;color:${dc};border:1px solid ${dc}30">${m.difficulty}</span>
+            <span class="tag" style="background:${pc2}14;color:${pc2==='#00c896'?'var(--mint2)':'var(--sky2)'};border:1px solid ${pc2}30">${m.period==='weekly'?'📆 '+t('weekly'):'📅 '+t('monthly')}</span>
+            ${m.period==='monthly'?`<span class="tag ts">ส่ง ${subCount}/${maxSubs}x</span>`:''}
+          </div>
+          <div class="tip-box">💡 ${m.tip}</div>
+          ${status==='approved'&&m.period==='weekly'?`<div class="mc-status" style="background:#dcfce7;color:#166534">✅ ${t('approved')}</div>`:''}
+          ${status==='pending'?`<div class="mc-status" style="background:#fef9c3;color:#854d0e">⏳ ${t('pending')}</div>`:''}
+          ${status==='rejected'?`<div class="mc-status" style="background:#fee2e2;color:#991b1b;margin-bottom:7px">❌ ${t('rejected')}</div><button class="btn btn-primary" style="width:100%;justify-content:center" data-submit="${m.id}" data-isteam="${isTeam}">📤 ${t('submitProof')}</button>`:''}
+          ${!status?`<button class="btn btn-primary" style="width:100%;justify-content:center" data-submit="${m.id}" data-isteam="${isTeam}">📤 ${t('submitProof')}</button>`:''}
+          ${status==='approved'&&m.period==='monthly'&&subCount<maxSubs?`<button class="btn btn-sky" style="width:100%;justify-content:center;margin-top:6px" data-submit="${m.id}" data-isteam="${isTeam}">📤 ส่งเพิ่ม (${subCount}/${maxSubs})</button>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+    ${missions.length===0?`<div class="empty"><div class="empty-ic">🎯</div>ไม่พบภารกิจ</div>`:''}
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LEADERBOARD
+══════════════════════════════════════════════════════════ */
+function renderLeaderboard(){
+  const ep=effectiveProp();
+  const staffList=[...S.users].filter(u=>u.role==='staff'&&(!ep||u.property===ep)).sort((a,b)=>b.points-a.points);
+  const teamList=[...S.teams].filter(t=>!ep||t.property===ep).sort((a,b)=>b.points-a.points);
+  const medals=['#eab308','#94a3b8','#c97b4b'];
+  const list=S.lbTab==='individual'?staffList:teamList;
+  const myId=S.currentUser.id;
+  const myTeamId=S.currentUser.teamId;
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">🏆</div><div><div class="ph-title">${t('leaderboard')}</div></div></div></div>
+    <div class="tab-row">
+      <button class="tab ${S.lbTab==='individual'?'act':''}" data-lbtab="individual">👤 Individual</button>
+      <button class="tab ${S.lbTab==='team'?'act':''}" data-lbtab="team">👥 Team</button>
+    </div>
+    ${isSuper()?`<div class="chip-row" style="margin-bottom:12px">
+      ${['all','CCH','CHBR','CWR'].map(p=>`<button class="chip ${S._superPropFilter===p?'act':''}" data-superprop="${p}">${p==='all'?'🌐 ทั้งหมด':p}</button>`).join('')}
+    </div>`:''}
+    ${S.lbTab==='individual'&&staffList.length>=3?`
+    <div class="lb-podium">
+      ${/* podiumOrder[i] = which staffList index to show in display slot i (left=2nd, center=1st, right=3rd) */
+      [1,0,2].map((staffIdx,displayPos)=>{
+        const uu=staffList[staffIdx]; if(!uu) return '';
+        const rank=staffIdx+1; // rank 1=gold,2=silver,3=bronze
+        const mc=medals[staffIdx]; // medals[0]=gold medals[1]=silver medals[2]=bronze
+        const barH=displayPos===1?138:displayPos===0?108:88; // center=tallest
+        const medalIc=['🥇','🥈','🥉'][staffIdx];
+        return `<div class="lb-pod" data-staffdetail="${uu.id}" style="cursor:pointer" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          ${userInitDiv(uu,40,16)}
+          <div style="font-size:11px;font-weight:800;margin:4px 0 2px;max-width:82px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${uu.name.split(' ')[0]}</div>
+          ${propTag(uu.property)}
+          <div style="font-size:12px;font-weight:800;color:${mc};margin:4px 0;font-family:'Kanit',sans-serif">${uu.points.toLocaleString()} pts</div>
+          <div class="lb-bar" style="height:${barH}px;width:82px;background:${mc}18;border:1.5px solid ${mc}55;border-radius:8px 8px 0 0">
+            <div style="text-align:center;padding-top:8px">
+              <div style="font-size:26px;font-weight:900;color:${mc};font-family:'Kanit',sans-serif;line-height:1">${rank}</div>
+              <div style="font-size:11px;margin-top:2px">${medalIc}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    <div class="card">
+      ${list.map((item,i)=>{
+        const isMe=S.lbTab==='individual'?item.id===myId:(myTeamId&&item.id===myTeamId);
+        return `<div ${S.lbTab==='individual'?`data-staffdetail="${item.id}"`:''} class="lb-row${isMe?' lb-row-me':''}" style="display:flex;align-items:center;gap:10px;padding:10px ${isMe?'10px':'0'};border-bottom:${i<list.length-1?'1px solid var(--bg2)':'none'};${isMe?'background:var(--mint3);border-radius:9px;margin:2px -10px;':''}${S.lbTab==='individual'?'cursor:pointer;':''}transition:background .15s">
+          <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:900;font-family:'Kanit',sans-serif;font-size:${i<3?14:11}px;background:${i===0?'linear-gradient(135deg,#fbbf24,#d97706)':i===1?'linear-gradient(135deg,#e2e8f0,#94a3b8)':i===2?'linear-gradient(135deg,#fcd9a0,#c97b4b)':'var(--bg2)'};color:${i<3?'#fff':'var(--muted)'};box-shadow:${i<3?'0 2px 6px rgba(0,0,0,.15)':'none'}">
+            ${i+1}
+          </div>
+          ${S.lbTab==='individual'?userInitDiv(item,32,12):`<div style="width:32px;height:32px;border-radius:9px;background:var(--sky3);display:flex;align-items:center;justify-content:center;font-size:16px">👥</div>`}
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:${isMe?800:600}">${item.name}${isMe?' 👈':''}</div>
+            <div style="display:flex;gap:5px;margin-top:2px;flex-wrap:wrap;align-items:center">
+              ${propTag(item.property)}
+              ${S.lbTab==='individual'?`<span style="font-size:10px;color:var(--muted)">🔥 ${item.streak}d</span>`:''}
+              ${S.lbTab==='individual'?item.badges.map(b=>`<span class="tag tm" style="font-size:9px">🏅 ${b}</span>`).join(''):''}
+            </div>
+          </div>
+          <div style="text-align:right;display:flex;align-items:center;gap:5px">
+            <div><div style="font-size:15px;font-weight:800;color:${i<3?medals[i]:'var(--mint)'};font-family:'Kanit',sans-serif">${item.points.toLocaleString()}</div>
+            <div style="font-size:9px;color:var(--muted)">pts</div></div>
+            ${S.lbTab==='individual'?`<span style="font-size:14px;color:var(--muted);margin-left:2px">›</span>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+      ${list.length===0?`<div class="empty"><div class="empty-ic">🏆</div>ไม่มีข้อมูล</div>`:''}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TEAMS
+══════════════════════════════════════════════════════════ */
+function renderTeams(){
+  const teams=visibleTeams();
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">👥</div><div><div class="ph-title">${t('teams')}</div></div></div></div>
+    <div class="g3">
+      ${teams.map(team=>{
+        const members=S.users.filter(u=>team.memberIds?.includes(u.id));
+        const pc=propColor(team.property);
+        return `<div class="card" style="border-top:4px solid ${pc}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div><div style="font-size:14px;font-weight:800">${team.name}</div>
+            <div style="display:flex;gap:5px;margin-top:4px">${propTag(team.property)}</div></div>
+            <div style="text-align:right"><div style="font-size:18px;font-weight:800;color:${pc};font-family:'Kanit',sans-serif">${team.points.toLocaleString()}</div><div style="font-size:9px;color:var(--muted)">pts</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+            ${members.map(m=>`<div style="display:flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 9px">
+              ${userInitDiv(m,20,9)}
+              <span style="font-size:11px;font-weight:600">${m.name.split(' ')[0]}</span>
+            </div>`).join('')}
+            ${(team.externalMembers||[]).map(em=>`<div style="display:flex;align-items:center;gap:4px;background:#ffedd5;border:1px solid #fed7aa;border-radius:20px;padding:3px 9px">
+              <div style="width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0">${(em.name[0]||'?').toUpperCase()}</div>
+              <span style="font-size:11px;font-weight:600;color:#9a3412">${em.name.split(' ')[0]}</span>
+              <span style="font-size:9px;color:#c2410c" title="ภายนอกระบบ">🌐</span>
+            </div>`).join('')}
+          </div>
+          <div class="prog"><div class="prog-fill" style="width:${Math.min(100,(team.points/5000)*100)}%;background:linear-gradient(90deg,${pc},${pc}88)"></div></div>
+          <div style="text-align:right;font-size:9px;color:var(--muted);margin-top:3px">เป้าหมาย 5,000 pts</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   REPORTS — with selective export
+══════════════════════════════════════════════════════════ */
+function renderReports(){
+  const props=isSuper()?['all','CCH','CHBR','CWR']:[S.currentUser.property];
+  const ep=S.reportProp==='all'&&isSuper()?null:S.reportProp;
+  let vSubs=ep?S.submissions.filter(s=>s.property===ep||(S.users.find(u=>u.id===s.userId)?.property===ep)):S.submissions;
+  if(S.reportPeriod!=='all') vSubs=vSubs.filter(s=>{const m=S.missions.find(x=>x.id===s.missionId);return m?.period===S.reportPeriod;});
+  // Date range filter
+  if(S.reportDateFrom) vSubs=vSubs.filter(s=>s.submittedAt>=S.reportDateFrom);
+  if(S.reportDateTo) vSubs=vSubs.filter(s=>s.submittedAt<=S.reportDateTo);
+  const fSubs=vSubs;
+
+  // Build selection state
+  if(!S._dlSelected) S._dlSelected={users:true,teams:true,missions:true,submissions:true,photos:true};
+
+  const allTeams=ep?S.teams.filter(t=>t.property===ep):S.teams;
+  const allStaff=ep?S.users.filter(u=>u.property===ep&&u.role==='staff'):S.users.filter(u=>u.role==='staff');
+
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">📈</div><div><div class="ph-title">${t('reports')}</div></div></div></div>
+    <!-- Filters -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+      <div class="chip-row" style="margin-bottom:0">
+        ${props.map(p=>`<button class="chip ${S.reportProp===p?'act':''}" data-rprop="${p}">${p==='all'?'🌐 All':p}</button>`).join('')}
+      </div>
+      <div class="chip-row" style="margin-bottom:0">
+        ${[['all',t('all')],['weekly',t('weekly')],['monthly',t('monthly')]].map(([k,l])=>`<button class="chip ${S.reportPeriod===k?'act':''}" data-rperiod="${k}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <!-- Date Range Filter -->
+    <div class="card" style="margin-bottom:14px;padding:14px">
+      <div class="card-title">📅 กรองตามช่วงวันที่</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-g" style="margin-bottom:0;flex:1;min-width:130px">
+          <label class="form-lbl">จากวันที่</label>
+          <input class="inp" type="date" id="rpt-from" value="${S.reportDateFrom||''}">
+        </div>
+        <div class="form-g" style="margin-bottom:0;flex:1;min-width:130px">
+          <label class="form-lbl">ถึงวันที่</label>
+          <input class="inp" type="date" id="rpt-to" value="${S.reportDateTo||''}">
+        </div>
+        <button class="btn btn-ghost btn-sm" id="rpt-apply-date">🔍 กรอง</button>
+        <button class="btn btn-outline btn-sm" id="rpt-clear-date">✕ ล้าง</button>
+      </div>
+      ${S.reportDateFrom||S.reportDateTo?`<div style="font-size:10px;color:var(--mint);margin-top:7px;font-weight:700">📌 กรอง: ${S.reportDateFrom||'ตั้งแต่ต้น'} → ${S.reportDateTo||'ถึงปัจจุบัน'} (${fSubs.length} รายการ)</div>`:''}
+    </div>
+    <!-- Stats -->
+    <div class="stat-grid" style="margin-bottom:16px">
+      ${[['📋',fSubs.length,'ทั้งหมด','var(--sky2)'],['✅',fSubs.filter(s=>s.status==='approved').length,'อนุมัติ','var(--mint)'],['⏳',fSubs.filter(s=>s.status==='pending').length,'รอตรวจ','var(--yellow)'],['❌',fSubs.filter(s=>s.status==='rejected').length,'ไม่ผ่าน','var(--red)']].map(([ic,v,l,c])=>`
+        <div class="stat-card"><div style="font-size:20px;margin-bottom:3px">${ic}</div><div class="stat-val" style="color:${c}">${v}</div><div class="stat-lbl">${l}</div><div class="stat-bar" style="background:${c}"></div></div>`).join('')}
+    </div>
+    <!-- Download Excel selector -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">📊 ดาวน์โหลด Excel</div>
+      <div class="dl-selector">
+        ${[['users','👤 พนักงาน'],['teams','👥 ทีม'],['missions','🎯 ภารกิจ'],['submissions','📋 งานที่ส่ง'],['photos','📷 รูปภาพ (ZIP)']].map(([k,l])=>`
+          <div class="dl-row">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600">
+              <input type="checkbox" id="dl-${k}" ${S._dlSelected[k]?'checked':''} style="accent-color:var(--mint)">
+              ${l}
+            </label>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" data-action="downloadExcel">📊 ${t('downloadExcel')}</button>
+        <button class="btn btn-sky" data-action="downloadPhotos">📦 ${t('downloadPhotos')}</button>
+      </div>
+    </div>
+    <!-- PDF Export selector -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">📄 ดาวน์โหลด PDF (เลือกได้)</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div class="form-g" style="flex:1;min-width:130px;margin-bottom:0">
+          <label class="form-lbl">🏢 เลือกทีม</label>
+          <select class="inp" id="pdf-team-filter">
+            <option value="all">— ทั้งหมด —</option>
+            ${allTeams.map(tm=>`<option value="${tm.id}">${tm.name} (${tm.property})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-g" style="flex:1;min-width:130px;margin-bottom:0">
+          <label class="form-lbl">👤 เลือกบุคคล</label>
+          <select class="inp" id="pdf-user-filter">
+            <option value="all">— ทั้งหมด —</option>
+            ${allStaff.map(u=>`<option value="${u.id}">${u.name} (${u.property})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-g" style="flex:1;min-width:130px;margin-bottom:0">
+          <label class="form-lbl">🏨 เลือกสาขา</label>
+          <select class="inp" id="pdf-prop-filter">
+            <option value="all">— ทั้งหมด —</option>
+            ${['CCH','CHBR','CWR'].map(p=>`<option value="${p}">${p}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-danger" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none" data-action="downloadPDF">📄 ดาวน์โหลด PDF</button>
+        <button class="btn btn-ghost btn-sm" data-action="downloadLeaderboardPDF">🏆 PDF Leaderboard</button>
+      </div>
+    </div>
+    <!-- Per-property breakdown -->
+    ${isSuper()?`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">🏨 สรุปรายสาขา</div>
+      ${['CCH','CHBR','CWR'].map(pid=>{
+        const pSubs=fSubs.filter(s=>s.property===pid||(S.users.find(u=>u.id===s.userId)?.property===pid));
+        const pct=pSubs.length?Math.round((pSubs.filter(s=>s.status==='approved').length/pSubs.length)*100):0;
+        const pc=propColor(pid);
+        return `<div style="margin-bottom:11px;padding:11px;background:${pc}07;border:1.5px solid ${pc}22;border-radius:11px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <div style="font-weight:800;color:${pc};font-size:14px;font-family:'Kanit',sans-serif">${pid}</div>
+            <span style="color:${pct>=70?'var(--mint)':pct>=40?'var(--yellow)':'var(--red)'};font-weight:700">${pct}%</span>
+          </div>
+          <div class="prog" style="margin-bottom:5px"><div class="prog-fill" style="width:${pct}%;background:${pc}"></div></div>
+          <div style="font-size:10px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">
+            <span>✅ ${pSubs.filter(s=>s.status==='approved').length}</span>
+            <span>⏳ ${pSubs.filter(s=>s.status==='pending').length}</span>
+            <span>📸 ${pSubs.reduce((a,s)=>a+(s.photos?.length||0),0)} รูป</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    <!-- Submissions list -->
+    <div class="card">
+      <div class="card-title">📋 รายการส่งงาน (${fSubs.length})</div>
+      ${fSubs.map((sub,i)=>{
+        const uu=S.users.find(x=>x.id===sub.userId);
+        const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+        const m=S.missions.find(x=>x.id===sub.missionId);
+        return `<div style="padding:11px 0;border-bottom:${i<fSubs.length-1?'1px solid var(--bg2)':'none'}">
+          <div style="display:flex;align-items:flex-start;gap:9px;margin-bottom:6px">
+            ${userInitDiv(uu,28,11)}
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700">${tm?tm.name:uu?.name} ${propTag(tm?tm.property:uu?.property)}</div>
+              <div style="font-size:10px;color:var(--muted)">⚡ ${S.lang==='th'?m?.title:m?.titleEn} • ${sub.submittedAt}</div>
+              ${sub.note?`<div style="font-size:10px;color:var(--text2);background:var(--bg2);padding:4px 8px;border-radius:7px;margin-top:4px">📝 ${sub.note}</div>`:''}
+            </div>
+            <span class="tag ${sub.status==='approved'?'tg':sub.status==='pending'?'ty':'tr'}">${t(sub.status)}</span>
+          </div>
+        </div>`;
+      }).join('')}
+      ${fSubs.length===0?`<div class="empty"><div class="empty-ic">📋</div>ไม่มีข้อมูล</div>`:''}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE
+══════════════════════════════════════════════════════════ */
+function renderProfile(){
+  const u=S.currentUser;
+  const mySubs=S.submissions.filter(s=>s.userId===u.id);
+  const pc=propColor(u.property!=='all'?u.property:'CCH');
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">👤</div><div><div class="ph-title">${t('profile')}</div></div></div></div>
+    <div class="card" style="margin-bottom:14px;border-color:${pc}44;background:linear-gradient(135deg,${pc}08,var(--bg2))">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div class="initials" style="width:62px;height:62px;font-size:22px;font-family:'Kanit',sans-serif;border-radius:16px;background:linear-gradient(135deg,${pc},${pc}bb)">${initials(u.name)}</div>
+        <div style="flex:1">
+          <div style="font-size:19px;font-weight:800;color:var(--text);font-family:'Kanit',sans-serif">${u.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">@${u.username}</div>
+          <div style="display:flex;gap:7px;margin-top:5px;flex-wrap:wrap">${propTag(u.property==='all'?'all':u.property)}<span class="tag tg">${t('role_'+u.role)}</span><span class="tag tb">${u.dept}</span></div>
+        </div>
+        <button class="btn btn-outline btn-sm" data-action="editProfile">✏️ แก้ไข</button>
+      </div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:14px">
+      ${[['⭐',u.points.toLocaleString(),'คะแนนรวม','var(--mint)'],['🔥',u.streak,t('streak'),'var(--orange)'],['✅',mySubs.filter(s=>s.status==='approved').length,'ภารกิจสำเร็จ','var(--teal)'],['🏅',u.badges.length,t('badges'),'#e879f9']].map(([ic,v,l,c])=>`
+        <div class="stat-card"><div style="font-size:20px;margin-bottom:3px">${ic}</div><div class="stat-val" style="color:${c}">${v}</div><div class="stat-lbl">${l}</div><div class="stat-bar" style="background:${c}"></div></div>`).join('')}
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">🏅 Badges</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${u.badges.length===0?`<span style="color:var(--muted);font-size:12px">ยังไม่มี Badge</span>`:''}
+        ${u.badges.map(b=>`<div style="padding:7px 13px;border-radius:11px;background:var(--mint3);border:1.5px solid var(--border2);color:var(--mint2);font-weight:700;font-size:12px">🏅 ${b}</div>`).join('')}
+      </div>
+    </div>
+    ${(()=>{const myTeam=S.teams.find(t=>t.id===u.teamId);return myTeam?`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">👥 ทีมของฉัน</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--sky),var(--sky2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👥</div>
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:14px">${myTeam.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${myTeam.property} • ${myTeam.points.toLocaleString()} pts</div>
+        </div>
+      </div>
+    </div>`:'';})()}
+    <div class="card">
+      <div class="card-title">📋 ประวัติการส่งงาน</div>
+      ${mySubs.length===0?`<div class="empty"><div class="empty-ic">📋</div>ยังไม่มี</div>`:''}
+      ${mySubs.slice().reverse().map((sub,i)=>{
+        const m=S.missions.find(x=>x.id===sub.missionId);
+        return `<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:${i<mySubs.length-1?'1px solid var(--bg2)':'none'}">
+          <span style="font-size:15px">${m?.period==='monthly'?'📅':'📆'}</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:700">${S.lang==='th'?m?.title:m?.titleEn}</div><div style="font-size:10px;color:var(--muted)">${sub.submittedAt}${sub.adminNote?' • 💬 '+sub.adminNote:''}</div></div>
+          <span class="tag ${sub.status==='approved'?'tg':sub.status==='pending'?'ty':'tr'}">${sub.status==='approved'?'✅':sub.status==='pending'?'⏳':'❌'} ${t(sub.status)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ADMIN
+══════════════════════════════════════════════════════════ */
+function renderAdmin(){
+  const u=S.currentUser;
+  const tabs=[['submissions','📋',t('review')],['users','👤',t('manageUsers')],['missions','🎯','ภารกิจ'],['teams','👥',t('manageTeams')],['departments','🏢',t('manageDepts')]];
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">⚙️</div><div><div class="ph-title">${t('admin')}</div></div></div>
+    <div class="ph-sub">${isSuper()?'Super Admin — All Properties':u.property+' only'}</div></div>
+    ${!isSuper()?`<div class="alert-info">🔒 Property Admin: จัดการข้อมูลของ <strong>${u.property}</strong> เท่านั้น</div>`:''}
+    <div class="tab-row">
+      ${tabs.map(([k,ic,l])=>`<button class="tab ${S.adminTab===k?'act':''}" data-atab="${k}">${ic} ${l}</button>`).join('')}
+    </div>
+    ${S.adminTab==='submissions'?renderAdminSubs():''}
+    ${S.adminTab==='users'?renderAdminUsers():''}
+    ${S.adminTab==='missions'?renderAdminMissions():''}
+    ${S.adminTab==='teams'?renderAdminTeams():''}
+    ${S.adminTab==='departments'?renderAdminDepts():''}
+  </div>`;
+}
+
+function renderAdminSubs(){
+  const allSubs=visibleSubs();
+  const filterSt=S._subFilter||'pending';
+  const subs=filterSt==='all'?allSubs:allSubs.filter(s=>s.status===filterSt);
+  const pending=allSubs.filter(s=>s.status==='pending').length;
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:7px">
+      <div style="font-weight:800;color:var(--text)">📋 ${t('review')}</div>
+      <div class="chip-row" style="margin-bottom:0">
+        ${[['pending','⏳ รอตรวจ ('+pending+')'],['approved','✅ ผ่าน'],['rejected','❌ ไม่ผ่าน'],['all','📋 ทั้งหมด']].map(([k,l])=>`<button class="chip ${filterSt===k?'act':''}" data-subfilter="${k}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      ${subs.map((sub,i)=>{
+        const uu=S.users.find(x=>x.id===sub.userId);
+        const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+        const m=S.missions.find(x=>x.id===sub.missionId);
+        return `<div style="padding:13px 0;border-bottom:${i<subs.length-1?'1px solid var(--bg2)':'none'}">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            ${userInitDiv(uu,30,12)}
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:3px">
+                <span style="font-size:12px;font-weight:800">${tm?tm.name:uu?.name}</span>
+                ${propTag(tm?tm.property:uu?.property)}
+                <span class="tag ${sub.status==='approved'?'tg':sub.status==='pending'?'ty':'tr'}">${t(sub.status)}</span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span>⚡ ${S.lang==='th'?m?.title:m?.titleEn}</span>
+                <span style="color:var(--dim)">•</span>
+                <span>${m?.code||''}</span>
+                <span style="color:var(--dim)">•</span>
+                <span>${sub.submittedAt}</span>
+                ${(()=>{const pc=(sub.photos&&sub.photos.length>0?sub.photos:FB.getPhotos(sub.id)).length;
+                  return pc>0?`<span style="background:var(--mint3);color:var(--mint2);border:1px solid var(--border2);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:800">📷 ${pc} รูป</span>`:'<span style="color:var(--dim);font-size:9px">📷 ไม่มีรูป</span>';
+                })()}
+              </div>
+              ${sub.note?`<div style="font-size:11px;color:var(--text2);background:var(--bg2);padding:5px 9px;border-radius:8px;margin-bottom:6px;word-break:break-word">📝 ${sub.note}</div>`:''}
+              ${sub.adminNote?`<div style="font-size:10px;color:var(--orange);margin-bottom:4px">💬 ${sub.adminNote}</div>`:''}
+              ${(()=>{
+                // Restore photos from photo store if missing from state
+                let ph2=sub.photos&&sub.photos.length>0?sub.photos:FB.getPhotos(sub.id);
+                if(ph2.length>0){
+                  return `<div style="margin-bottom:8px">
+                    <div style="font-size:10px;font-weight:800;color:var(--mint2);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+                      📷 รูปหลักฐาน
+                      <span style="background:var(--mint3);color:var(--mint2);border:1px solid var(--border2);border-radius:20px;padding:1px 8px;font-size:10px">${ph2.length} รูป</span>
+                      <button onclick="event.stopPropagation();openPhotoViewer('${sub.id}',0)"
+                        style="margin-left:auto;padding:2px 10px;border-radius:20px;border:1.5px solid var(--mint);background:var(--mint3);color:var(--mint2);font-size:10px;font-weight:700;cursor:pointer">
+                        ดูทั้งหมด →
+                      </button>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      ${ph2.map((ph,pi)=>`
+                        <div onclick="event.stopPropagation();openPhotoViewer('${sub.id}',${pi})"
+                          style="width:80px;height:80px;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);transition:all .15s;flex-shrink:0;position:relative"
+                          onmouseover="this.style.borderColor='var(--mint)';this.style.transform='scale(1.05)'"
+                          onmouseout="this.style.borderColor='var(--border)';this.style.transform='scale(1)'">
+                          <img src="${ph}" style="width:100%;height:100%;object-fit:cover">
+                          ${pi===0&&ph2.length>1?`<div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700">+${ph2.length}</div>`:''}
+                        </div>`).join('')}
+                    </div>
+                  </div>`;
+                } else {
+                  return `<div style="font-size:10px;color:var(--dim);background:var(--bg2);border-radius:7px;padding:5px 9px;margin-bottom:6px;display:inline-flex;align-items:center;gap:4px">📷 ไม่มีรูปภาพแนบ</div>`;
+                }
+              })()}
+            </div>
+            ${sub.status==='pending'?`<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+              <button class="btn btn-primary btn-xs" data-approvsub="${sub.id}">${t('approveBtn')}</button>
+              <button class="btn btn-danger btn-xs" data-rejectsub="${sub.id}">${t('rejectBtn')}</button>
+            </div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+      ${subs.length===0?`<div class="empty"><div class="empty-ic">📋</div>ไม่มีรายการ</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderAdminUsers(){
+  // ── Loading / error boundary ──
+  if (S._fbStatus === 'loading' && (!S.users || S.users.length === 0)) {
+    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:12px">
+      <div style="width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--mint);border-radius:50%;animation:spin .8s linear infinite"></div>
+      <div style="font-size:13px;color:var(--muted)">กำลังโหลดข้อมูลจาก Firebase...</div>
+    </div>`;
+  }
+  const users=visibleUsers().filter(u=>u.id!==S.currentUser.id||isSuper());
+  const disconnectedBanner = (S._fbStatus === 'error' || S._fbStatus === 'disconnected') ? `
+    <div style="background:#fff1f2;border:1.5px solid #fecaca;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-weight:700;color:#b91c1c;font-size:12px">⚠️ ขาดการเชื่อมต่อ Firebase — ข้อมูลอาจไม่ใช่ล่าสุด</div>
+      </div>
+      <button onclick="FB._retryCount=0;FB._attachListener();FB._monitorConnection()" style="padding:5px 14px;border-radius:7px;border:1.5px solid #fca5a5;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 ลองใหม่</button>
+    </div>` : '';
+  return `<div>
+    ${disconnectedBanner}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:7px">
+      <div style="font-weight:800">👤 พนักงาน (${users.length})</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" data-action="dlStaffTemplate">📥 ${t('staffTemplate')}</button>
+        <button class="btn btn-sky btn-sm" data-action="importStaff">📤 ${t('importStaff')}</button>
+        <button class="btn btn-primary btn-sm" data-action="addUser">➕ เพิ่ม</button>
+      </div>
+    </div>
+    ${_renderUserTable(users)}
+  </div>`;
+}
+
+function _renderUserTable(users){
+  // Build set of valid dept names per property for quick lookup
+  const validDepts={};
+  ['CCH','CHBR','CWR'].forEach(p=>{
+    validDepts[p]=new Set(S.departments.filter(d=>d.property===p).map(d=>d.name));
+  });
+  return `<div class="tbl-wrap">
+    <table>
+      <thead><tr>${['ชื่อ','Username','Property','แผนก','Role','คะแนน','สถานะ',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${users.map(uu=>{
+          const prop=uu.property==='all'?null:uu.property;
+          const deptValid=!prop||validDepts[prop]?.has(uu.dept);
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:8px">${userInitDiv(uu,26,10)}<span style="font-weight:700;font-size:12px">${uu.name}</span></div></td>
+            <td style="color:var(--muted);font-size:11px;font-family:monospace">${uu.username}</td>
+            <td>${propTag(uu.property==='all'?'all':uu.property)}</td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;${deptValid?'color:var(--text2)':'color:var(--red);font-weight:700'}">
+                ${uu.dept||'—'}
+                ${!deptValid&&uu.dept?`<span title="แผนกนี้ไม่มีในระบบ" style="background:var(--red2);color:var(--red);border-radius:4px;padding:0 4px;font-size:9px;font-weight:800">!</span>`:''}
+              </span>
+            </td>
+            <td><span class="tag ${uu.role==='admin1'?'tr':uu.role==='admin2'?'ts':'tg'}">${t('role_'+uu.role)}</span></td>
+            <td style="font-weight:800;color:var(--mint);font-family:'Kanit',sans-serif">${uu.points.toLocaleString()}</td>
+            <td><span class="tag ${uu.active?'tg':'tr'}">${uu.active?t('active'):t('inactive')}</span></td>
+            <td><div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-xs btn-icon" data-edituser="${uu.id}" title="Edit">✏️</button>
+              ${uu.id!==S.currentUser?.id?`<button class="btn btn-danger btn-xs btn-icon" data-toggleuser="${uu.id}" title="Toggle">${uu.active?'🔒':'🔓'}</button>`:''}
+            </div></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderAdminMissions(){
+  const missions=visibleMissions();
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:7px">
+      <div style="font-weight:800">🎯 ภารกิจ (${missions.length})</div>
+      <button class="btn btn-primary btn-sm" data-action="addMission">➕ เพิ่มภารกิจ</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>${['Code','ชื่อ','Property','Pts','ช่วง','ระดับ','Type','Deadline',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${missions.map(m=>`<tr>
+            <td style="font-family:monospace;font-size:10px;color:var(--sky2)">${m.code}</td>
+            <td style="font-weight:600;max-width:160px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${S.lang==='th'?m.title:m.titleEn}</div></td>
+            <td>${propTag(m.property)}</td>
+            <td style="color:var(--mint);font-weight:800">+${m.points}</td>
+            <td><span class="tag ${m.period==='weekly'?'tg':'ts'}">${m.period==='weekly'?'W':'M'}</span></td>
+            <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${DIFF_COLOR[m.difficulty]||'var(--mint)'}18;color:${DIFF_COLOR[m.difficulty]||'var(--mint)'};font-weight:700">${m.difficulty}</span></td>
+            <td style="color:var(--muted);font-size:11px">${m.type}</td>
+            <td style="font-size:10px;color:var(--muted)">${m.deadline}</td>
+            <td><div style="display:flex;gap:3px">
+              <button class="btn btn-ghost btn-xs btn-icon" data-editmission="${m.id}">✏️</button>
+              <button class="btn btn-danger btn-xs btn-icon" data-deletemission="${m.id}">🗑️</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderAdminTeams(){
+  const teams=visibleTeams();
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+      <div style="font-weight:800">👥 ทีม (${teams.length})</div>
+      <button class="btn btn-primary btn-sm" data-action="addTeam">➕ เพิ่มทีม</button>
+    </div>
+    <div class="g2">
+      ${teams.map(team=>{
+        const members=S.users.filter(u=>team.memberIds?.includes(u.id));
+        const pc=propColor(team.property);
+        return `<div class="card-sm" style="border-left:4px solid ${pc}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:800">${team.name}</div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-xs btn-icon" data-editteam="${team.id}">✏️</button>
+              <button class="btn btn-danger btn-xs btn-icon" data-deleteteam="${team.id}">🗑️</button>
+            </div>
+          </div>
+          ${propTag(team.property)}
+          <div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px">
+            ${members.map(m=>`<div style="display:flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2px 8px">${userInitDiv(m,18,8)}<span style="font-size:10px;font-weight:600">${m.name.split(' ')[0]}</span></div>`).join('')}
+            ${(team.externalMembers||[]).map(em=>`<div style="display:flex;align-items:center;gap:4px;background:#ffedd5;border:1px solid #fed7aa;border-radius:20px;padding:2px 8px">
+              <div style="width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex-shrink:0">${(em.name[0]||'?').toUpperCase()}</div>
+              <span style="font-size:10px;font-weight:600;color:#9a3412">${em.name.split(' ')[0]}</span>
+              <span style="font-size:8px;color:#c2410c">🌐</span>
+            </div>`).join('')}
+          </div>
+          ${(team.externalMembers||[]).length>0?`<div style="font-size:9px;color:var(--muted);margin-top:3px">🌐 ภายนอก: ${(team.externalMembers||[]).map(em=>em.name).join(', ')}</div>`:''}
+          <div style="font-size:14px;font-weight:800;color:${pc};font-family:'Kanit',sans-serif;margin-top:7px">${team.points.toLocaleString()} pts</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderAdminDepts(){
+  const depts=visibleDepts();
+  const logs=(S.deptLogs||[]).filter(l=>{
+    if(!isSuper()&&S.currentUser.property) return l.property===S.currentUser.property;
+    return true;
+  });
+  const actionLabel={create:'➕ สร้าง',edit:'✏️ แก้ไข',delete:'🗑️ ลบ'};
+  const actionColor={create:'var(--mint)',edit:'var(--sky2)',delete:'var(--red)'};
+  const actionBg={create:'rgba(0,200,150,.08)',edit:'rgba(56,189,248,.08)',delete:'rgba(239,68,68,.07)'};
+
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+      <div style="font-weight:800">🏢 แผนก (${depts.length})</div>
+      <button class="btn btn-primary btn-sm" data-action="addDept">➕ เพิ่มแผนก</button>
+    </div>
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <table>
+        <thead><tr>${['ชื่อแผนก','Property',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${depts.map(d=>`<tr>
+            <td style="font-weight:700">${d.name}</td>
+            <td>${propTag(d.property)}</td>
+            <td><div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-xs btn-icon" data-editdept="${d.id}">✏️</button>
+              <button class="btn btn-danger btn-xs btn-icon" data-deletedept="${d.id}">🗑️</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Audit Log ── -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:800;color:var(--text)">📋 ประวัติการเปลี่ยนแปลงแผนก</div>
+      <span style="font-size:10px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2px 9px;color:var(--muted);font-weight:700">${logs.length} รายการ</span>
+    </div>
+    ${logs.length===0
+      ? `<div style="text-align:center;padding:28px;color:var(--muted);background:var(--bg2);border-radius:12px;border:1.5px dashed var(--border)">
+          <div style="font-size:24px;margin-bottom:6px">📋</div>
+          <div style="font-size:12px">ยังไม่มีประวัติการเปลี่ยนแปลง</div>
+        </div>`
+      : `<div style="display:flex;flex-direction:column;gap:6px">
+          ${logs.map(l=>{
+            const dt=new Date(l.at);
+            const dateStr=dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+            const timeStr=dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+            const actor=S.users.find(u=>u.id===l.byId);
+            const actorInitials=(actor?.name||l.by||'?').split(' ').map(w=>w[0]?.toUpperCase()||'').slice(0,2).join('');
+            const pc=PROP_COLORS[l.property]||'#94a3b8';
+            return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 13px;background:${actionBg[l.action]||'#f8fafc'};border:1.5px solid ${l.action==='delete'?'rgba(239,68,68,.15)':l.action==='edit'?'rgba(56,189,248,.15)':'rgba(0,200,150,.15)'};border-radius:10px">
+              <div style="width:28px;height:28px;border-radius:8px;background:${actionBg[l.action]};border:1.5px solid ${actionColor[l.action]}44;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${actionLabel[l.action]?.split(' ')[0]||'📝'}</div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+                  <span style="font-size:11px;font-weight:800;color:${actionColor[l.action]}">${actionLabel[l.action]||l.action}</span>
+                  <span style="font-size:12px;font-weight:700;color:var(--text)">${l.deptName}</span>
+                  <span style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:20px;font-size:10px;font-weight:800;background:${pc}15;color:${pc};border:1px solid ${pc}40">${l.property}</span>
+                  ${l.action==='edit'&&(l.oldName!==l.deptName||l.oldProperty!==l.property)?`<span style="font-size:10px;color:var(--muted)">(จาก "${l.oldName||'?'}" ${l.oldProperty||'?'})</span>`:''}
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <div style="width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,${pc},${pc}bb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex-shrink:0">${actorInitials}</div>
+                    <span style="font-size:10px;color:var(--muted);font-weight:600">${l.by}</span>
+                  </div>
+                  <span style="font-size:10px;color:var(--dim)">•</span>
+                  <span style="font-size:10px;color:var(--dim)">${dateStr} ${timeStr}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`
+    }
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   NOTIFICATIONS
+══════════════════════════════════════════════════════════ */
+function renderNotifications(){
+  const mine=S.notifications.filter(n=>n.userId===S.currentUser.id).slice().reverse();
+  return `<div>
+    <div class="ph"><div class="ph-row"><div class="ph-ic">🔔</div><div><div class="ph-title">${t('notifications')}</div></div></div></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:11px">
+      <button class="btn btn-ghost btn-sm" data-action="markAllRead">✅ ${t('markRead')}</button>
+    </div>
+    <div class="card">
+      ${mine.length===0?`<div class="empty"><div class="empty-ic">🔔</div>${t('noNotif')}</div>`:''}
+      ${mine.map((n,i)=>`<div style="display:flex;gap:10px;padding:11px;border-radius:10px;margin-bottom:5px;${n.read?'':'background:var(--mint3);border:1px solid var(--border)'}">
+        <div style="width:30px;height:30px;border-radius:8px;background:${n.read?'var(--bg2)':'rgba(0,200,150,.15)'};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔔</div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:${n.read?500:700};color:${n.read?'var(--muted)':'var(--text)'}">${S.lang==='th'?n.msg:n.msgEn}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">📅 ${n.time}</div></div>
+        ${!n.read?`<div style="width:8px;height:8px;background:var(--mint);border-radius:50%;flex-shrink:0;margin-top:5px;animation:pulse 2s infinite"></div>`:''}
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════════════════ */
+let _pendingPhotos=[];
+function updatePhotoPreview(){
+  const pv=document.getElementById('photoPreview');
+  if(!pv) return;
+  pv.innerHTML=`<div class="photo-grid">${_pendingPhotos.map((ph,i)=>`<div class="photo-thumb"><img src="${ph}"><div class="photo-rm" onclick="event.stopPropagation();_pendingPhotos.splice(${i},1);updatePhotoPreview()">✕</div></div>`).join('')}</div>`;
+}
+
+function renderModal(){
+  const m=S.modal;
+  let body='';
+  if(m.type==='submitProof'){
+    const miss=S.missions.find(x=>x.id===m.missionId);
+    body=`<div class="modal-hd"><div class="modal-title">📤 ส่งหลักฐาน</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div style="font-weight:800;font-size:13px;margin-bottom:9px">${S.lang==='th'?miss?.title:miss?.titleEn}</div>
+      <div class="tip-box">💡 ${miss?.tip}</div>
+      ${miss?.period==='monthly'?`<div class="alert-info">📅 ภารกิจรายเดือน: ส่งได้สูงสุด ${miss?.submissionsPerPeriod||4} ครั้ง/เดือน</div>`:''}
+      <div class="form-g"><label class="form-lbl">📝 ${t('note')}</label><textarea class="inp" id="subNote" rows="3" placeholder="อธิบายสิ่งที่ทำ..." style="resize:vertical"></textarea></div>
+      <div class="form-g"><label class="form-lbl">📷 ${t('attachPhoto')}</label>
+        <div class="photo-drop" onclick="document.getElementById('photoInputGlobal').click()">
+          <div style="font-size:22px;margin-bottom:4px">📷</div>
+          <div style="font-size:12px;color:var(--muted)">คลิกเพื่อเลือกรูป (สูงสุด 5 รูป)</div>
+        </div>
+        <div id="photoPreview"></div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-action="confirmSubmit">📤 ${t('submit')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='editUser'||m.type==='addUser'){
+    const uu=m.type==='editUser'?S.users.find(x=>x.id===m.userId):null;
+    const myProp=isSuper()?null:S.currentUser.property;
+    const propOptions=isSuper()?['CCH','CHBR','CWR','all']:[(myProp||'CCH')];
+    const defaultProp=uu?.property||myProp||'CCH';
+    const pForDepts=defaultProp==='all'?'CCH':defaultProp;
+
+    // Build dept options from S.departments only (no hardcoded fallbacks)
+    const deptsByProp={};
+    ['CCH','CHBR','CWR'].forEach(p=>{
+      deptsByProp[p]=S.departments.filter(d=>d.property===p).map(d=>d.name);
+    });
+    const initialDepts=deptsByProp[pForDepts]||[];
+
+    body=`<div class="modal-hd"><div class="modal-title">${m.type==='addUser'?'➕ เพิ่มพนักงาน':'✏️ แก้ไขพนักงาน'}</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div class="form-row">
+        <div class="form-g"><label class="form-lbl">${t('name')} (EN)</label><input class="inp" id="uf-name" value="${uu?.name||''}" placeholder="ชื่อ-นามสกุล ภาษาอังกฤษ" autocomplete="off"></div>
+        <div class="form-g"><label class="form-lbl">${t('username')}</label><input class="inp" id="uf-user" value="${uu?.username||''}" placeholder="ตัวอักษรเล็ก ตัวเลข จุด" autocomplete="off"></div>
+        <div class="form-g"><label class="form-lbl">${t('password')}</label><input class="inp" id="uf-pw" type="${m.type==='addUser'?'text':'password'}" value="${m.type==='addUser'?'':'•'.repeat(uu?.password?.length||0)}" placeholder="${m.type==='addUser'?'ตั้งรหัสผ่าน':'เว้นว่างถ้าไม่เปลี่ยน'}" autocomplete="new-password"></div>
+        <div class="form-g"><label class="form-lbl">${t('property')}</label>
+          <select class="inp" id="uf-prop" onchange="(function(){
+            const p=this.value==='all'?'CCH':this.value;
+            const dp=${JSON.stringify(deptsByProp)};
+            const opts=dp[p]||[];
+            const sel=document.getElementById('uf-dept');
+            if(sel){
+              sel.innerHTML=opts.length>0
+                ? opts.map(d=>'<option value=\\''+d+'\\'>'+d+'</option>').join('')
+                : '<option value=\"\">— ไม่มีแผนกในระบบ —</option>';
+            }
+            const ts=document.getElementById('uf-team');
+            if(ts){
+              const teams=${JSON.stringify(S.teams.map(t=>({id:t.id,name:t.name,property:t.property})))};
+              const ft=teams.filter(t=>t.property===(this.value==='all'?t.property:this.value));
+              ts.innerHTML='<option value=\"\">— ไม่ระบุ —</option>'+ft.map(t=>'<option value=\\''+t.id+'\\'>'+t.name+'</option>').join('');
+            }
+          }).call(this)">
+            ${propOptions.map(p=>`<option value="${p}" ${defaultProp===p?'selected':''}>${p}</option>`).join('')}
+          </select></div>
+        <div class="form-g"><label class="form-lbl">${t('dept')}</label>
+          <select class="inp" id="uf-dept">
+            ${initialDepts.length>0
+              ? initialDepts.map(d=>`<option value="${d}" ${uu?.dept===d?'selected':''}>${d}</option>`).join('')
+              : `<option value="${uu?.dept||''}">${uu?.dept||'— ไม่มีแผนกในระบบ —'}</option>`
+            }
+          </select></div>
+        ${isSuper()||S.currentUser.role==='admin2'?`<div class="form-g"><label class="form-lbl">${t('role')}</label>
+          <select class="inp" id="uf-role">
+            <option value="staff" ${(uu?.role||'staff')==='staff'?'selected':''}>Staff</option>
+            <option value="admin2" ${uu?.role==='admin2'?'selected':''}>Property Admin</option>
+            ${isSuper()?`<option value="admin1" ${uu?.role==='admin1'?'selected':''}>Super Admin</option>`:''}
+          </select></div>`:''}
+        <div class="form-g"><label class="form-lbl">ทีม</label>
+          <select class="inp" id="uf-team">
+            <option value="">— ไม่ระบุ —</option>
+            ${S.teams.filter(t2=>!myProp||t2.property===myProp||t2.property===defaultProp).map(tm=>`<option value="${tm.id}" ${uu?.teamId===tm.id?'selected':''}>${tm.name}</option>`).join('')}
+          </select></div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-saveuser="${uu?.id||''}">💾 ${t('save')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='addMission'||m.type==='editMission'){
+    const miss=m.type==='editMission'?S.missions.find(x=>x.id===m.missionId):null;
+    const propOpts=isSuper()?['all','CCH','CHBR','CWR']:[(S.currentUser.property||'CCH')];
+    body=`<div class="modal-hd"><div class="modal-title">${m.type==='addMission'?'➕ เพิ่มภารกิจ':'✏️ แก้ไขภารกิจ'}</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div class="form-g"><label class="form-lbl">Code</label><input class="inp" id="mf-code" value="${miss?.code||''}"></div>
+      <div class="form-g"><label class="form-lbl">ชื่อ (TH)</label><input class="inp" id="mf-title" value="${miss?.title||''}"></div>
+      <div class="form-g"><label class="form-lbl">Title (EN)</label><input class="inp" id="mf-titleen" value="${miss?.titleEn||''}"></div>
+      <div class="form-g"><label class="form-lbl">รายละเอียด</label><textarea class="inp" id="mf-desc" rows="2">${miss?.desc||''}</textarea></div>
+      <div class="form-row">
+        <div class="form-g"><label class="form-lbl">Points</label><input class="inp" id="mf-points" type="number" value="${miss?.points||50}"></div>
+        <div class="form-g"><label class="form-lbl">Deadline</label><input class="inp" id="mf-deadline" type="date" value="${miss?.deadline||'2026-04-30'}"></div>
+        <div class="form-g"><label class="form-lbl">ช่วงเวลา</label>
+          <select class="inp" id="mf-period">
+            <option value="weekly" ${miss?.period==='weekly'?'selected':''}>📆 รายสัปดาห์</option>
+            <option value="monthly" ${miss?.period==='monthly'?'selected':''}>📅 รายเดือน</option>
+          </select></div>
+        <div class="form-g"><label class="form-lbl">ระดับ</label>
+          <select class="inp" id="mf-diff">${['easy','medium','hard'].map(v=>`<option value="${v}" ${miss?.difficulty===v?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div class="form-g"><label class="form-lbl">ประเภท</label>
+          <select class="inp" id="mf-type">
+            <option value="individual" ${miss?.type==='individual'?'selected':''}>👤 Individual</option>
+            <option value="team" ${miss?.type==='team'?'selected':''}>👥 Team</option>
+          </select></div>
+        <div class="form-g"><label class="form-lbl">${t('subPerPeriod')}</label><input class="inp" id="mf-subper" type="number" min="1" max="31" value="${miss?.submissionsPerPeriod||1}"></div>
+        <div class="form-g"><label class="form-lbl">${t('property')}</label>
+          <select class="inp" id="mf-prop">${propOpts.map(p=>`<option value="${p}" ${(miss?.property||'all')===p?'selected':''}>${p}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-g"><label class="form-lbl">💡 Tip</label><input class="inp" id="mf-tip" value="${miss?.tip||''}"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-savemission="${miss?.id||''}">💾 ${t('save')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='addTeam'||m.type==='editTeam'){
+    const team=m.type==='editTeam'?S.teams.find(x=>x.id===m.teamId):null;
+    const teamProp=isSuper()?(m.type==='editTeam'?team?.property:(m.forceProp||'CCH')):S.currentUser.property;
+    // Members already in THIS team
+    const thisTeamMembers=team?.memberIds||[];
+    // All staff in this property
+    const allPropStaff=S.users.filter(u=>u.role==='staff'&&u.property===teamProp&&u.active);
+    // Staff in other teams (highlight but still show)
+    const inOtherTeam=new Set(S.teams.filter(tt=>!team||tt.id!==team.id).flatMap(tt=>tt.memberIds||[]));
+    // External members (non-system) stored in team
+    const extMembers=team?.externalMembers||[];
+    body=`<div class="modal-hd"><div class="modal-title">${m.type==='addTeam'?'➕ เพิ่มทีม':'✏️ แก้ไขทีม'}</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div class="form-row">
+        <div class="form-g"><label class="form-lbl">ชื่อทีม</label><input class="inp" id="tf-name" value="${team?.name||''}"></div>
+        ${isSuper()?`<div class="form-g"><label class="form-lbl">${t('property')}</label>
+          <select class="inp" id="tf-prop">${['CCH','CHBR','CWR'].map(p=>`<option value="${p}" ${teamProp===p?'selected':''}>${p}</option>`).join('')}</select></div>`:''}
+      </div>
+
+      <!-- ── Staff in system ── -->
+      <div class="form-g">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <label class="form-lbl" style="margin-bottom:0">👤 พนักงานในระบบ — ${teamProp} (${allPropStaff.length} คน)</label>
+          <label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="tf-show-all" style="accent-color:var(--mint)">
+            แสดงทุกคน
+          </label>
+        </div>
+        <input class="inp" id="tf-search" placeholder="🔍 ค้นหาชื่อ..." style="margin-bottom:6px;font-size:12px">
+        <div id="tf-member-list" style="display:flex;flex-wrap:wrap;gap:5px;padding:9px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;max-height:160px;overflow-y:auto">
+          ${allPropStaff.length===0?`<div style="font-size:12px;color:var(--muted);padding:6px">ไม่มีพนักงานใน ${teamProp}</div>`:''}
+          ${allPropStaff.map(u=>{
+            const inThis=thisTeamMembers.includes(u.id);
+            const inOther=inOtherTeam.has(u.id)&&!inThis;
+            const otherTeamName=inOther?(S.teams.find(tt=>tt.memberIds?.includes(u.id)&&(!team||tt.id!==team.id))?.name||'ทีมอื่น'):'';
+            return `<label class="tm-m-lbl" data-name="${u.name.toLowerCase()}" data-inother="${inOther?'1':'0'}"
+              style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 9px;
+                background:${inThis?'rgba(0,200,150,.15)':inOther?'rgba(249,115,22,.06)':'#fff'};
+                border:1.5px solid ${inThis?'var(--mint)':inOther?'rgba(249,115,22,.4)':'var(--border)'};
+                border-radius:8px;font-size:11px;font-weight:600;transition:all .15s;
+                ${inOther&&!inThis?'display:none':''}" id="tm-lbl-${u.id}">
+              <input type="checkbox" id="tm-m-${u.id}" ${inThis?'checked':''} style="accent-color:var(--mint)">
+              ${userInitDiv(u,18,8)} ${u.name}
+              <span style="font-size:9px;color:var(--muted)">(${u.dept})</span>
+              ${inOther?`<span style="font-size:9px;background:#ffedd5;color:#9a3412;border-radius:5px;padding:1px 5px;margin-left:2px">อยู่ ${otherTeamName}</span>`:''}
+            </label>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- ── External members (not in system) ── -->
+      <div class="form-g">
+        <label class="form-lbl">🌐 สมาชิกภายนอก (ไม่อยู่ในระบบ)</label>
+        <div id="ext-member-list" data-existing="${encodeURIComponent(JSON.stringify(extMembers))}" style="margin-bottom:6px"></div>
+        <button id="add-ext-member" style="width:100%;padding:7px;border-radius:9px;border:1.5px dashed var(--border2);background:var(--bg2);color:var(--mint2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s" onclick="event.stopPropagation();addExtMemberRow()">➕ เพิ่มสมาชิกภายนอก</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">💡 ใช้สำหรับผู้ร่วมทีมที่ไม่มีบัญชีในระบบ</div>
+      </div>
+
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-saveteam="${team?.id||''}">💾 ${t('save')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='addDept'||m.type==='editDept'){
+    const dept=m.type==='editDept'?S.departments.find(x=>x.id===m.deptId):null;
+    body=`<div class="modal-hd"><div class="modal-title">${m.type==='addDept'?'➕ เพิ่มแผนก':'✏️ แก้ไขแผนก'}</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div class="form-g"><label class="form-lbl">ชื่อแผนก</label><input class="inp" id="df-name" value="${dept?.name||''}"></div>
+      ${isSuper()?`<div class="form-g"><label class="form-lbl">${t('property')}</label>
+        <select class="inp" id="df-prop">${['CCH','CHBR','CWR'].map(p=>`<option value="${p}" ${dept?.property===p?'selected':''}>${p}</option>`).join('')}</select></div>`:''}
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-savedept="${dept?.id||''}">💾 ${t('save')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='confirm'){
+    body=`<div class="modal-hd"><div class="modal-title">⚠️ ${t('confirm')}</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${m.message}</div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-danger" style="flex:1;justify-content:center" data-action="confirmAction">🗑️ ${t('confirm')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='editProfile'){
+    const u=S.currentUser;
+    const deptOpts=[...new Set([...S.departments.map(d=>d.name),'Back of House','Engineering','HR','F&B','Housekeeping','Front Office'])];
+    body=`<div class="modal-hd"><div class="modal-title">✏️ แก้ไขโปรไฟล์</div><button class="modal-x" data-closemodal>✕</button></div>
+      <div class="form-g"><label class="form-lbl">👤 ${t('name')}</label><input class="inp" id="pf-name" value="${u.name}"></div>
+      <div class="form-g"><label class="form-lbl">🏢 ${t('dept')}</label>
+        <select class="inp" id="pf-dept">${deptOpts.map(d=>`<option${d===u.dept?' selected':''}>${d}</option>`).join('')}</select>
+      </div>
+      <div class="divider"></div>
+      <div class="alert-info" style="font-size:11px">🔒 เปลี่ยนรหัสผ่าน (เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน)</div>
+      <div class="form-row">
+        <div class="form-g"><label class="form-lbl">รหัสผ่านใหม่</label><input class="inp" type="password" id="pf-pw" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="new-password"></div>
+        <div class="form-g"><label class="form-lbl">ยืนยันรหัสผ่าน</label><input class="inp" type="password" id="pf-pw2" placeholder="ยืนยันอีกครั้ง" autocomplete="new-password"></div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:4px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" data-action="saveProfile">💾 ${t('save')}</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" data-closemodal>${t('cancel')}</button>
+      </div>`;
+  }
+  else if(m.type==='photoViewer'){
+    const sub=S.submissions.find(s=>s.id===m.subId);
+    // Restore from photo store if photos not in state
+    const photos=sub?.photos?.length>0 ? sub.photos : FB.getPhotos(m.subId);
+    const total=photos.length;
+    const curr=Math.max(0,Math.min(m.idx||0,total-1));
+    const uu=S.users.find(x=>x.id===sub?.userId);
+    const tm=sub?.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+    const miss=S.missions.find(x=>x.id===sub?.missionId);
+    body=`<div class="modal-hd">
+      <div>
+        <div class="modal-title">📷 รูปหลักฐาน ${curr+1}/${total}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">
+          ${tm?tm.name:uu?.name||'?'} • ${S.lang==='th'?miss?.title:miss?.titleEn||'?'} • ${sub?.submittedAt||'?'}
+        </div>
+      </div>
+      <button class="modal-x" data-closemodal>✕</button>
+    </div>
+    ${total===0?`<div style="text-align:center;padding:32px;color:var(--muted)">📷 ไม่มีรูปภาพ</div>`:`
+    <!-- Main photo display -->
+    <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;margin-bottom:10px;min-height:200px;display:flex;align-items:center;justify-content:center">
+      <img src="${photos[curr]}" id="mainPhoto"
+        style="max-width:100%;max-height:65vh;object-fit:contain;display:block;border-radius:12px">
+      <!-- Prev button -->
+      ${curr>0?`<button onclick="event.stopPropagation();setState({modal:{...S.modal,idx:${curr-1}}})"
+        style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>`:''}
+      <!-- Next button -->
+      ${curr<total-1?`<button onclick="event.stopPropagation();setState({modal:{...S.modal,idx:${curr+1}}})"
+        style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>`:''}
+      <!-- Download button -->
+      <a href="${photos[curr]}" download="evidence_${sub?.id||'photo'}_${curr+1}.jpg"
+        style="position:absolute;bottom:8px;right:8px;background:rgba(0,200,150,.85);color:#fff;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:4px">
+        ⬇ ดาวน์โหลด
+      </a>
+    </div>
+    <!-- Thumbnails strip -->
+    ${total>1?`<div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0">
+      ${photos.map((ph,i)=>`<img src="${ph}"
+        onclick="event.stopPropagation();setState({modal:{...S.modal,idx:${i}}})"
+        style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;
+               border:2px solid ${i===curr?'var(--mint)':'var(--border)'};
+               opacity:${i===curr?1:0.6};flex-shrink:0;transition:all .15s">`).join('')}
+    </div>`:''}
+    `}`;
+  }
+  else if(m.type==='staffDetail'){
+    const uu=S.users.find(x=>x.id===m.userId);
+    if(!uu){body='<div class="modal-hd"><div class="modal-title">ไม่พบข้อมูล</div><button class="modal-x" data-closemodal>✕</button></div>';}
+    else{
+      const pc=PROP_COLORS[uu.property]||'#00c896';
+      const allStaff=[...S.users].filter(u=>u.role==='staff'&&u.property===uu.property).sort((a,b)=>b.points-a.points);
+      const rank=allStaff.findIndex(u=>u.id===uu.id)+1;
+      const medals=['🥇','🥈','🥉'];
+      const mySubs=S.submissions.filter(s=>s.userId===uu.id);
+      const approved=mySubs.filter(s=>s.status==='approved');
+      const pending=mySubs.filter(s=>s.status==='pending').length;
+      const team=S.teams.find(t=>t.id===uu.teamId);
+      const initStr=(uu.name||'?').split(' ').map(w=>w[0]?.toUpperCase()||'').slice(0,2).join('');
+      body=`<div class="modal-hd">
+        <div class="modal-title">👤 ข้อมูลพนักงาน</div>
+        <button class="modal-x" data-closemodal>✕</button>
+      </div>
+      <!-- Profile header -->
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;padding:14px;background:linear-gradient(135deg,${pc}10,${pc}05);border:1.5px solid ${pc}30;border-radius:12px">
+        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,${pc},${pc}bb);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;font-family:'Kanit',sans-serif;flex-shrink:0">${initStr}</div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:800;font-family:'Kanit',sans-serif;color:var(--text)">${uu.name}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+            <span class="prop-tag prop-${uu.property}" style="background:${pc}15;color:${pc};border:1px solid ${pc}40">${uu.property}</span>
+            <span class="tag tg" style="font-size:10px">${uu.dept||'—'}</span>
+          </div>
+        </div>
+        <div style="text-align:center;flex-shrink:0">
+          <div style="font-size:28px;font-weight:900;color:${pc};font-family:'Kanit',sans-serif;line-height:1">${rank<=3?medals[rank-1]:'#'+rank}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">อันดับใน ${uu.property}</div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="text-align:center;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px">
+          <div style="font-size:20px;font-weight:800;color:${pc};font-family:'Kanit',sans-serif">${uu.points.toLocaleString()}</div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:2px">⭐ คะแนนรวม</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px">
+          <div style="font-size:20px;font-weight:800;color:var(--orange);font-family:'Kanit',sans-serif">${uu.streak}</div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:2px">🔥 วันต่อเนื่อง</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px">
+          <div style="font-size:20px;font-weight:800;color:var(--teal);font-family:'Kanit',sans-serif">${approved.length}</div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:2px">✅ ภารกิจสำเร็จ</div>
+        </div>
+      </div>
+      <!-- Team -->
+      ${team?`<div style="display:flex;align-items:center;gap:9px;padding:10px 13px;background:rgba(56,189,248,.06);border:1.5px solid rgba(56,189,248,.2);border-radius:10px;margin-bottom:14px">
+        <span style="font-size:20px">👥</span>
+        <div><div style="font-size:12px;font-weight:700;color:var(--text)">${team.name}</div><div style="font-size:10px;color:var(--muted)">${team.property} • ${team.points.toLocaleString()} pts (ทีม)</div></div>
+      </div>`:''}
+      <!-- Badges -->
+      ${uu.badges&&uu.badges.length>0?`<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">🏅 รางวัล</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${uu.badges.map(b=>`<span class="tag tm" style="font-size:11px">🏅 ${b}</span>`).join('')}</div>
+      </div>`:''}
+      <!-- Recent missions -->
+      ${approved.length>0?`<div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:7px">📋 ภารกิจที่ทำสำเร็จล่าสุด</div>
+        ${approved.slice(-5).reverse().map(sub=>{const miss=S.missions.find(x=>x.id===sub.missionId);return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg2)">
+          <div><div style="font-size:11px;font-weight:600">${S.lang==='th'?miss?.title:miss?.titleEn||'?'}</div><div style="font-size:9px;color:var(--muted)">${sub.submittedAt}</div></div>
+          <span style="font-size:12px;font-weight:800;color:var(--mint)">+${miss?.points||0}</span>
+        </div>`;}).join('')}
+      </div>`:`<div class="empty" style="padding:16px"><div class="empty-ic">🎯</div><div style="font-size:11px">ยังไม่มีภารกิจที่สำเร็จ</div></div>`}
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:14px" data-closemodal>✕ ปิด</button>`;
+    }
+  }
+  const isWide = m.type==='photoViewer';
+  return `<div class="modal-overlay" id="modalOverlay"><div class="modal ${isWide?'modal-wide':''}" id="modalBox" onclick="event.stopPropagation()">${body}</div></div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXCEL EXPORT — Multi-sheet via SheetJS
+══════════════════════════════════════════════════════════ */
+function exportExcel(){
+  const sel=S._dlSelected||{users:true,teams:true,missions:true,submissions:true};
+  const ep=S.reportProp==='all'&&isSuper()?null:S.reportProp;
+  let vSubs=ep?S.submissions.filter(s=>s.property===ep):S.submissions;
+  if(S.reportPeriod!=='all') vSubs=vSubs.filter(s=>{const m=S.missions.find(x=>x.id===s.missionId);return m?.period===S.reportPeriod;});
+  if(S.reportDateFrom) vSubs=vSubs.filter(s=>s.submittedAt>=S.reportDateFrom);
+  if(S.reportDateTo) vSubs=vSubs.filter(s=>s.submittedAt<=S.reportDateTo);
+  const fSubs=vSubs;
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Staff
+  if(sel.users){
+    const vUsers=ep?S.users.filter(u=>u.property===ep):S.users;
+    const staffData=[['Username','Name','Property','Department','Role','Points','Streak','Badges','Status','Team']];
+    vUsers.forEach(u=>{
+      const teamName=S.teams.find(t=>t.id===u.teamId)?.name||'';
+      staffData.push([u.username,u.name,u.property,u.dept,u.role,u.points,u.streak,u.badges.join(';'),u.active?'Active':'Inactive',teamName]);
+    });
+    const ws1=XLSX.utils.aoa_to_sheet(staffData);
+    ws1['!cols']=[{wch:15},{wch:25},{wch:8},{wch:20},{wch:14},{wch:8},{wch:8},{wch:25},{wch:10},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,ws1,'Staff');
+  }
+
+  // Sheet 2: Teams
+  if(sel.teams){
+    const vTeams=ep?S.teams.filter(t=>t.property===ep):S.teams;
+    const teamData=[['Team Name','Property','Members','Departments','Points','Streak']];
+    vTeams.forEach(tm=>{
+      const members=S.users.filter(u=>tm.memberIds?.includes(u.id));
+      teamData.push([tm.name,tm.property,members.map(m=>m.name).join('; '),tm.depts?.join('; ')||'',tm.points,tm.streak||0]);
+    });
+    const ws2=XLSX.utils.aoa_to_sheet(teamData);
+    ws2['!cols']=[{wch:25},{wch:8},{wch:50},{wch:30},{wch:8},{wch:8}];
+    XLSX.utils.book_append_sheet(wb,ws2,'Teams');
+  }
+
+  // Sheet 3: Missions
+  if(sel.missions){
+    const vMissions=ep?S.missions.filter(m=>m.property===ep||m.property==='all'):S.missions;
+    const mData=[['Code','Title (TH)','Title (EN)','Property','Period','Difficulty','Type','Points','Deadline','Sub/Period']];
+    vMissions.forEach(m=>{
+      mData.push([m.code,m.title,m.titleEn,m.property,m.period,m.difficulty,m.type,m.points,m.deadline,m.submissionsPerPeriod||1]);
+    });
+    const ws3=XLSX.utils.aoa_to_sheet(mData);
+    ws3['!cols']=[{wch:15},{wch:40},{wch:40},{wch:8},{wch:10},{wch:10},{wch:12},{wch:7},{wch:12},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws3,'Missions');
+  }
+
+  // Sheet 4: Submissions
+  if(sel.submissions){
+    const sData=[['Date','Submitter','Type','Property','Mission Title','Mission Code','Period','Points Earned','Status','Note','Admin Note','Photo Count']];
+    fSubs.forEach(sub=>{
+      const uu=S.users.find(x=>x.id===sub.userId);
+      const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+      const m=S.missions.find(x=>x.id===sub.missionId);
+      sData.push([
+        sub.submittedAt,
+        tm?tm.name:(uu?.name||'-'),
+        tm?'Team':'Individual',
+        sub.property||(tm?tm.property:uu?.property)||'-',
+        m?.title||'-',
+        m?.code||'-',
+        m?.period||'-',
+        sub.status==='approved'?(m?.points||0):0,
+        sub.status,
+        sub.note||'',
+        sub.adminNote||'',
+        sub.photos?.length||0,
+      ]);
+    });
+    const ws4=XLSX.utils.aoa_to_sheet(sData);
+    ws4['!cols']=[{wch:12},{wch:25},{wch:12},{wch:8},{wch:35},{wch:15},{wch:10},{wch:12},{wch:10},{wch:30},{wch:25},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws4,'Submissions');
+  }
+
+  // Sheet 5: Staff mission detail
+  if(sel.submissions){
+    const sdData=[['Name','Username','Property','Dept','Missions Done','Pending','Rejected','Total Points']];
+    const vStaff=ep?S.users.filter(u=>u.property===ep&&u.role==='staff'):S.users.filter(u=>u.role==='staff');
+    vStaff.forEach(u=>{
+      const subs=fSubs.filter(s=>s.userId===u.id);
+      const done=subs.filter(s=>s.status==='approved').map(s=>{const m=S.missions.find(x=>x.id===s.missionId);return m?.title||'';}).join('; ');
+      sdData.push([u.name,u.username,u.property,u.dept,done||'-',subs.filter(s=>s.status==='pending').length,subs.filter(s=>s.status==='rejected').length,u.points]);
+    });
+    const ws5=XLSX.utils.aoa_to_sheet(sdData);
+    ws5['!cols']=[{wch:25},{wch:15},{wch:8},{wch:20},{wch:60},{wch:9},{wch:9},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws5,'Staff-Missions');
+  }
+
+  const now=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb,`GreenPulse_Report_${now}.xlsx`);
+}
+
+/* ══════════════════════════════════════════════════════════
+   PDF EXPORT — Print-to-PDF via browser print dialog
+══════════════════════════════════════════════════════════ */
+function exportPDF(){
+  const ep=S.reportProp==='all'&&isSuper()?null:S.reportProp;
+  const teamFilter=document.getElementById('pdf-team-filter')?.value||'all';
+  const userFilter=document.getElementById('pdf-user-filter')?.value||'all';
+  const propFilter=document.getElementById('pdf-prop-filter')?.value||'all';
+
+  let subs=S.submissions.filter(s=>s.status==='approved');
+  if(S.reportDateFrom) subs=subs.filter(s=>s.submittedAt>=S.reportDateFrom);
+  if(S.reportDateTo) subs=subs.filter(s=>s.submittedAt<=S.reportDateTo);
+  if(ep) subs=subs.filter(s=>s.property===ep||(S.users.find(u=>u.id===s.userId)?.property===ep));
+  if(propFilter!=='all') subs=subs.filter(s=>{
+    const u=S.users.find(x=>x.id===s.userId); const tm=s.teamId?S.teams.find(t=>t.id===s.teamId):null;
+    return (s.property||tm?.property||u?.property)===propFilter;
+  });
+  if(teamFilter!=='all') subs=subs.filter(s=>s.teamId===teamFilter);
+  if(userFilter!=='all') subs=subs.filter(s=>s.userId===userFilter);
+
+  const now=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const dateRange=S.reportDateFrom||S.reportDateTo?`ช่วงวันที่: ${S.reportDateFrom||'ตั้งแต่ต้น'} ถึง ${S.reportDateTo||'ปัจจุบัน'}`:'ทุกช่วงเวลา';
+
+  // Group subs
+  const groups={};
+  subs.forEach(sub=>{
+    const u=S.users.find(x=>x.id===sub.userId);
+    const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+    const m=S.missions.find(x=>x.id===sub.missionId);
+    const key=tm?`ทีม: ${tm.name} (${tm.property})`:`${u?.name||'?'} (${u?.property||'?'})`;
+    if(!groups[key]) groups[key]={pts:0, items:[]};
+    groups[key].pts+=(m?.points||0);
+    groups[key].items.push({date:sub.submittedAt, mission:m?.title||'?', pts:m?.points||0, note:sub.note||''});
+  });
+
+  const rows=Object.entries(groups).map(([name,g])=>`
+    <tr style="background:#f0fdf9"><td colspan="3" style="font-weight:800;color:#0d9488;padding:8px 10px;font-size:13px">${name}</td><td style="font-weight:800;color:#00c896;text-align:right;padding:8px 10px">${g.pts.toLocaleString()} pts</td></tr>
+    ${g.items.map(it=>`<tr><td style="padding:5px 10px 5px 20px;font-size:11px;color:#666">${it.date}</td><td style="padding:5px 10px;font-size:11px">${it.mission}</td><td style="padding:5px 10px;font-size:11px;color:#888">${it.note}</td><td style="text-align:right;padding:5px 10px;font-size:11px;color:#00c896">+${it.pts}</td></tr>`).join('')}
+  `).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>GreenPulse Report</title>
+  <style>
+    body{font-family:'Sarabun','Helvetica',sans-serif;margin:0;padding:24px;color:#0f4c35;font-size:12px}
+    h1{color:#00c896;font-size:22px;margin-bottom:4px}
+    .sub{color:#6b9e89;font-size:11px;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    th{background:#ecfdf5;color:#166534;padding:8px 10px;text-align:left;border-bottom:2px solid #a7f3d0;font-size:11px}
+    td{border-bottom:1px solid #e6fdf5;vertical-align:top}
+    @media print{body{padding:12px}}
+  </style></head><body>
+  <h1>🌿 GreenPulse — รายงานผลการดำเนินงาน</h1>
+  <div class="sub">วันที่พิมพ์: ${now} | ${dateRange} | ${teamFilter!=='all'?'ทีม: '+S.teams.find(t=>t.id===teamFilter)?.name:userFilter!=='all'?'บุคคล: '+S.users.find(u=>u.id===userFilter)?.name:propFilter!=='all'?'สาขา: '+propFilter:'ทุกหน่วย'}</div>
+  <table><thead><tr><th>วันที่</th><th>ภารกิจ</th><th>หมายเหตุ</th><th style="text-align:right">คะแนน</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot><tr style="background:#ecfdf5"><td colspan="3" style="padding:9px 10px;font-weight:800;font-size:13px">รวมทั้งหมด</td><td style="padding:9px 10px;font-weight:800;color:#00c896;font-size:14px;text-align:right">${subs.reduce((a,s)=>a+(S.missions.find(x=>x.id===s.missionId)?.points||0),0).toLocaleString()} pts</td></tr></tfoot>
+  </table></body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+function exportLeaderboardPDF(){
+  const ep=effectiveProp();
+  const staffList=[...S.users].filter(u=>u.role==='staff'&&(!ep||u.property===ep)).sort((a,b)=>b.points-a.points);
+  const teamList=[...S.teams].filter(t=>!ep||t.property===ep).sort((a,b)=>b.points-a.points);
+  const now=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const medals=['🥇','🥈','🥉'];
+
+  const indRows=staffList.map((u,i)=>`<tr ${i<3?'style="font-weight:700;background:#f0fdf9"':''}>
+    <td style="padding:6px 10px;text-align:center">${i<3?medals[i]:`#${i+1}`}</td>
+    <td style="padding:6px 10px">${u.name}</td>
+    <td style="padding:6px 10px">${u.property}</td>
+    <td style="padding:6px 10px">${u.dept||'-'}</td>
+    <td style="padding:6px 10px;font-weight:700;color:#00c896;text-align:right">${u.points.toLocaleString()}</td>
+  </tr>`).join('');
+
+  const teamRows=teamList.map((tm,i)=>`<tr ${i<3?'style="font-weight:700;background:#f0fdf9"':''}>
+    <td style="padding:6px 10px;text-align:center">${i<3?medals[i]:`#${i+1}`}</td>
+    <td style="padding:6px 10px">${tm.name}</td>
+    <td style="padding:6px 10px">${tm.property}</td>
+    <td style="padding:6px 10px;font-weight:700;color:#00c896;text-align:right">${tm.points.toLocaleString()}</td>
+  </tr>`).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>GreenPulse Leaderboard</title>
+  <style>body{font-family:'Sarabun','Helvetica',sans-serif;margin:0;padding:24px;color:#0f4c35}
+  h1{color:#00c896;font-size:22px}h2{color:#0d9488;font-size:15px;margin-top:20px}
+  table{width:100%;border-collapse:collapse}th{background:#ecfdf5;padding:7px 10px;text-align:left;border-bottom:2px solid #a7f3d0;font-size:11px}
+  td{border-bottom:1px solid #e6fdf5;font-size:12px}@media print{body{padding:12px}}</style></head>
+  <body><h1>🏆 GreenPulse — Leaderboard</h1><p style="color:#6b9e89;font-size:11px">วันที่: ${now}</p>
+  <h2>👤 บุคคล</h2>
+  <table><thead><tr><th>อันดับ</th><th>ชื่อ</th><th>สาขา</th><th>แผนก</th><th style="text-align:right">คะแนน</th></tr></thead><tbody>${indRows}</tbody></table>
+  <h2>👥 ทีม</h2>
+  <table><thead><tr><th>อันดับ</th><th>ชื่อทีม</th><th>สาขา</th><th style="text-align:right">คะแนน</th></tr></thead><tbody>${teamRows}</tbody></table>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+
+async function exportPhotosZip(){
+  const ep=S.reportProp==='all'&&isSuper()?null:S.reportProp;
+  const vSubs=ep?S.submissions.filter(s=>s.property===ep):S.submissions;
+  const subsWithPhotos=vSubs.filter(s=>s.photos&&s.photos.length>0);
+  if(subsWithPhotos.length===0){alert('ไม่มีรูปภาพในระบบ');return;}
+
+  const zip=new JSZip();
+  const now=new Date().toISOString().split('T')[0];
+
+  subsWithPhotos.forEach(sub=>{
+    const uu=S.users.find(x=>x.id===sub.userId);
+    const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+    const m=S.missions.find(x=>x.id===sub.missionId);
+    const submitter=(tm?tm.name:uu?.name||'unknown').replace(/[^a-zA-Z0-9ก-๛]/g,'_');
+    const mCode=(m?.code||'unknown').replace(/[^a-zA-Z0-9]/g,'_');
+    const folder=`${sub.property||'ALL'}/${mCode}_${submitter}_${sub.submittedAt}`;
+
+    sub.photos.forEach((ph,i)=>{
+      if(ph.startsWith('data:')){
+        const [meta,b64]=ph.split(',');
+        const ext=meta.includes('png')?'png':'jpg';
+        const binary=atob(b64);
+        const bytes=new Uint8Array(binary.length);
+        for(let j=0;j<binary.length;j++) bytes[j]=binary.charCodeAt(j);
+        zip.file(`${folder}/photo_${i+1}.${ext}`,bytes,{binary:true});
+      }
+    });
+  });
+
+  // Add a manifest text file
+  let manifest=`GreenPulse Photo Export\nDate: ${now}\nTotal submissions: ${subsWithPhotos.length}\n\n`;
+  subsWithPhotos.forEach(sub=>{
+    const uu=S.users.find(x=>x.id===sub.userId);
+    const tm=sub.teamId?S.teams.find(t=>t.id===sub.teamId):null;
+    const m=S.missions.find(x=>x.id===sub.missionId);
+    manifest+=`---\nSubmitter: ${tm?tm.name:uu?.name}\nMission: ${m?.title||'?'}\nDate: ${sub.submittedAt}\nStatus: ${sub.status}\nPhotos: ${sub.photos.length}\n`;
+  });
+  zip.file('manifest.txt',manifest);
+
+  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`GreenPulse_Photos_${now}.zip`;
+  a.click();
+}
+
+/* ══════════════════════════════════════════════════════════
+   STAFF TEMPLATE & IMPORT
+══════════════════════════════════════════════════════════ */
+function downloadStaffTemplate(){
+  const myProp=isSuper()?null:S.currentUser.property;
+  const depts=S.departments.filter(d=>!myProp||d.property===myProp).map(d=>d.name);
+  const wb=XLSX.utils.book_new();
+  const data=[
+    ['Name (English)','Username','Password','Property','Department','Role'],
+    ['Notes: Full English name','Lowercase, no spaces','Min 4 chars',myProp||(depts.length>0?'CCH/CHBR/CWR':'CCH'),depts.join(' | ') || 'Back of House','staff or admin2'],
+    ['John Smith','staff.john','1234',myProp||'CCH',depts[0]||'Back of House','staff'],
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:25},{wch:18},{wch:12},{wch:8},{wch:20},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws,'Staff Template');
+  XLSX.writeFile(wb,`GreenPulse_Staff_Template_${myProp||'All'}.xlsx`);
+}
+
+function parseCsvLine(line){
+  const res=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  res.push(cur.trim());
+  return res;
+}
+
+function importStaffFromFile(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      let text=e.target.result;
+      if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+      const lines=text.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('Notes'));
+      const myProp=isSuper()?null:S.currentUser.property;
+      let imported=0,errors=[];
+      lines.slice(2).forEach((line,i)=>{
+        if(!line) return;
+        const cols=parseCsvLine(line);
+        if(cols.length<4){errors.push(`Row ${i+3}: not enough columns`);return;}
+        const [name,username,password,property,dept,role]=cols;
+        if(!name||!username||!password){errors.push(`Row ${i+3}: Name/Username/Password required`);return;}
+        const fp=myProp||(property||'CCH');
+        if(!['CCH','CHBR','CWR'].includes(fp)){errors.push(`Row ${i+3}: invalid property "${fp}"`);return;}
+        if(S.users.find(u=>u.username===username.trim())){errors.push(`Row ${i+3}: username "${username}" exists`);return;}
+        S.users=[...S.users,{id:uid(),name:name.trim(),username:username.trim().toLowerCase(),password:password.trim(),property:fp,dept:(dept||'Back of House').trim(),role:(role||'staff').trim(),points:0,badges:[],streak:0,active:true,teamId:null}];
+        imported++;
+      });
+      if(errors.length>0) alert(`Import done\nAdded: ${imported}\n\nErrors:\n${errors.slice(0,5).join('\n')}`);
+      else alert(`✅ Import success! Added ${imported} staff.`);
+      setState({});
+    }catch(err){alert('Cannot read file: '+err.message);}
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PHOTO VIEWER
+══════════════════════════════════════════════════════════ */
+function openPhotoViewer(subId, idx){
+  setState({modal:{type:'photoViewer',subId,idx}});
+}
+window.openPhotoViewer=openPhotoViewer;
+window.setState=setState;
+window.navTo=navTo;
+window.addExtMemberRow=addExtMemberRow;
+// S is already a let - expose to window for inline handlers
+Object.defineProperty(window,'S',{get:()=>S,set:v=>S=v});
+
+/* ══════════════════════════════════════════════════════════
+   EVENT BINDING
+══════════════════════════════════════════════════════════ */
+function bindAll(){
+  // Populate external member rows from data attribute (set by renderModal)
+  const extList = document.getElementById('ext-member-list');
+  if (extList && extList.dataset.existing) {
+    try {
+      const existing = JSON.parse(decodeURIComponent(extList.dataset.existing));
+      existing.forEach(em => addExtMemberRow(em.name, em.dept));
+    } catch(e) {}
+    delete extList.dataset.existing;
+  }
+  // Lang
+  document.querySelectorAll('[data-lang]').forEach(el=>el.addEventListener('click',()=>setState({lang:el.dataset.lang},true)));
+  // Nav
+  document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();navTo(el.dataset.nav);}));
+  document.querySelectorAll('[data-action="back"]').forEach(el=>el.addEventListener('click',navBack));
+  document.querySelectorAll('[data-action="home"]').forEach(el=>el.addEventListener('click',()=>navTo('dashboard')));
+  // Sidebar
+  const hamburger=document.getElementById('hamburgerBtn');
+  const overlay=document.getElementById('sidebarOverlay');
+  if(hamburger) hamburger.addEventListener('click',()=>{S.sideOpen=!S.sideOpen;render();});
+  if(overlay){ overlay.addEventListener('click',()=>{S.sideOpen=false;render();});
+    overlay.className='sidebar-overlay'+(S.sideOpen?' show':''); }
+  // Logout
+  document.querySelectorAll('[data-action="logout"]').forEach(el=>el.addEventListener('click',()=>setState({currentUser:null,page:'login',sideOpen:false,prevPages:[],loginTab:'login'},true)));
+  // Login / Register
+  const loginBtn=document.querySelector('[data-action="login"]');
+  if(loginBtn) loginBtn.addEventListener('click',doLogin);
+  ['loginUser','loginPw'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}); });
+  // Super admin property filter
+  document.querySelectorAll('[data-superprop]').forEach(el=>el.addEventListener('click',()=>setState({_superPropFilter:el.dataset.superprop},true)));
+  // Mission filters
+  document.querySelectorAll('[data-mtab]').forEach(el=>el.addEventListener('click',e=>{if(S.modal)return;setState({missionTab:el.dataset.mtab},true);}));
+  document.querySelectorAll('[data-mtype]').forEach(el=>el.addEventListener('click',e=>{if(S.modal)return;setState({missionType:el.dataset.mtype},true);}));
+  // LB tab
+  document.querySelectorAll('[data-lbtab]').forEach(el=>el.addEventListener('click',e=>{if(S.modal)return;setState({lbTab:el.dataset.lbtab},true);}));
+  // Admin tabs
+  document.querySelectorAll('[data-atab]').forEach(el=>el.addEventListener('click',e=>{if(S.modal)return;setState({adminTab:el.dataset.atab},true);}));
+  // Report filters
+  document.querySelectorAll('[data-rprop]').forEach(el=>el.addEventListener('click',()=>setState({reportProp:el.dataset.rprop},true)));
+  document.querySelectorAll('[data-rperiod]').forEach(el=>el.addEventListener('click',()=>setState({reportPeriod:el.dataset.rperiod},true)));
+  // Submission filter
+  document.querySelectorAll('[data-subfilter]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();S._subFilter=el.dataset.subfilter;render();}));
+  // Download checkboxes
+  document.querySelectorAll('[id^="dl-"]').forEach(el=>el.addEventListener('change',()=>{
+    const k=el.id.replace('dl-','');
+    if(!S._dlSelected) S._dlSelected={};
+    S._dlSelected[k]=el.checked;
+  }));
+  // Submit proof
+  document.querySelectorAll('[data-submit]').forEach(el=>el.addEventListener('click',()=>{
+    _pendingPhotos=[];
+    setState({modal:{type:'submitProof',missionId:el.dataset.submit,isTeam:el.dataset.isteam==='true'}});
+  }));
+  // Photo input
+  const photoInput=document.getElementById('photoInputGlobal');
+  if(photoInput){
+    photoInput.replaceWith(photoInput.cloneNode(true)); // clear old listeners
+    const newInput=document.getElementById('photoInputGlobal');
+    if(newInput) newInput.addEventListener('change',e=>{
+      const files=[...e.target.files].slice(0,5-_pendingPhotos.length);
+      files.forEach(f=>{const r=new FileReader();r.onload=ev=>{_pendingPhotos.push(ev.target.result);updatePhotoPreview();};r.readAsDataURL(f);});
+    });
+  }
+  // Confirm submit
+  const cs=document.querySelector('[data-action="confirmSubmit"]');
+  if(cs) cs.addEventListener('click',()=>{
+    if(_pendingPhotos.length===0&&S.modal?.missionId){
+      const miss=S.missions.find(x=>x.id===S.modal.missionId);
+      if(miss){const r=confirm(t('photoReq')+'\n\nส่งโดยไม่มีรูปหรือ?');if(!r)return;}
+    }
+    const note=document.getElementById('subNote')?.value||'';
+    const{missionId,isTeam}=S.modal;
+    const u=S.currentUser;
+    const miss=S.missions.find(x=>x.id===missionId);
+    const subId=uid();
+    const photosCopy=[..._pendingPhotos];
+    // Save photos to separate storage to avoid hitting 5MB limit on main data
+    if(photosCopy.length>0) FB.savePhotos(subId, photosCopy);
+    const newSub={id:subId,userId:isTeam?null:u.id,missionId,status:'pending',
+      submittedAt:new Date().toISOString().split('T')[0],note,adminNote:'',
+      photos:photosCopy,  // keep in state for display
+      teamId:isTeam?u.teamId:null,property:u.property};
+    S.submissions=[...S.submissions,newSub];
+    S.users.filter(x=>x.role==='admin1'||(x.role==='admin2'&&x.property===u.property)).forEach(admin=>{
+      S.notifications=[...S.notifications,{id:uid(),userId:admin.id,
+        msg:`${u.name} ส่งงาน: ${miss?.title} 📷${photosCopy.length} รูป`,
+        msgEn:`${u.name} submitted: ${miss?.titleEn} 📷${photosCopy.length} photos`,
+        read:false,time:new Date().toISOString().split('T')[0]}];
+    });
+    _pendingPhotos=[];
+    setState({modal:null});
+  });
+  // Approve/Reject
+  document.querySelectorAll('[data-approvsub]').forEach(el=>el.addEventListener('click',()=>approveSub(el.dataset.approvsub)));
+  document.querySelectorAll('[data-rejectsub]').forEach(el=>el.addEventListener('click',()=>rejectSub(el.dataset.rejectsub)));
+  // User CRUD
+  document.querySelectorAll('[data-action="addUser"]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'addUser'}})));
+  document.querySelectorAll('[data-edituser]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'editUser',userId:el.dataset.edituser}})));
+  document.querySelectorAll('[data-toggleuser]').forEach(el=>el.addEventListener('click',()=>{
+    const uid2=el.dataset.toggleuser;
+    S.users=S.users.map(u=>u.id===uid2?{...u,active:!u.active}:u);
+    setState({});
+  }));
+  document.querySelectorAll('[data-saveuser]').forEach(el=>el.addEventListener('click',()=>{
+    const eid=el.dataset.saveuser;
+    const nameVal=_v('uf-name').trim();
+    const userVal=_v('uf-user').toLowerCase().trim();
+    const pwRaw=document.getElementById('uf-pw')?.value||'';
+    // For edit: if password field is all bullets (placeholder) keep old pw
+    const existingUser=eid?S.users.find(u=>u.id===eid):null;
+    const pwVal=eid&&pwRaw.replace(/•/g,'')===''?existingUser?.password||pwRaw:pwRaw;
+    const propVal=_v('uf-prop');
+    const deptVal=_v('uf-dept');
+    const roleVal=_v('uf-role')||'staff';
+    const teamVal=_v('uf-team')||null;
+
+    if(!nameVal){alert('กรุณากรอกชื่อ-นามสกุล');return;}
+    if(!userVal||userVal.length<3){alert('ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร');return;}
+    if(!/^[a-z0-9._]+$/.test(userVal)){alert('ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษรเล็ก ตัวเลข จุด และขีดล่าง');return;}
+    if(!pwVal||pwVal.length<4){alert('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร');return;}
+
+    // Validate dept against S.departments for selected property
+    if(propVal&&propVal!=='all'){
+      const validDeptNames=S.departments.filter(d=>d.property===propVal).map(d=>d.name);
+      if(validDeptNames.length>0&&!validDeptNames.includes(deptVal)){
+        const ok=confirm(`⚠️ แผนก "${deptVal}" ไม่มีใน Property ${propVal}\n\nแผนกที่มีในระบบ: ${validDeptNames.join(', ')}\n\nบันทึกต่อไปหรือไม่?`);
+        if(!ok) return;
+      }
+    }
+
+    const n={name:nameVal,username:userVal,password:pwVal,property:propVal,dept:deptVal,role:roleVal,teamId:teamVal||null};
+
+    if(eid){
+      // Check username dup (exclude self)
+      if(S.users.find(u=>u.username===userVal&&u.id!==eid)){alert('Username นี้มีคนใช้แล้ว');return;}
+      S.users=S.users.map(u=>u.id===eid?{...u,...n}:u);
+      if(eid===S.currentUser.id){S.currentUser={...S.currentUser,...n};}
+    } else {
+      if(S.users.find(u=>u.username===userVal)){alert('Username นี้มีคนใช้แล้ว กรุณาเลือกใหม่');return;}
+      S.users=[...S.users,{id:uid(),...n,points:0,badges:[],streak:0,active:true}];
+    }
+    setState({modal:null});
+  }));
+  // Mission CRUD
+  document.querySelectorAll('[data-action="addMission"]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'addMission'}})));
+  document.querySelectorAll('[data-editmission]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'editMission',missionId:el.dataset.editmission}})));
+  document.querySelectorAll('[data-savemission]').forEach(el=>el.addEventListener('click',()=>{
+    const eid=el.dataset.savemission;
+    const n={code:_v('mf-code'),title:_v('mf-title'),titleEn:_v('mf-titleen'),desc:_v('mf-desc'),descEn:_v('mf-desc'),points:parseInt(_v('mf-points'))||50,period:_v('mf-period')||'weekly',difficulty:_v('mf-diff')||'easy',type:_v('mf-type')||'individual',submissionsPerPeriod:parseInt(_v('mf-subper'))||1,property:_v('mf-prop')||'all',tip:_v('mf-tip'),deadline:_v('mf-deadline')||'2026-04-30',area:'Back of House',category:'energy',status:'active'};
+    if(!n.code||!n.title){alert('กรุณากรอก Code และ ชื่อ');return;}
+    if(eid){S.missions=S.missions.map(m=>m.id===eid?{...m,...n}:m);}
+    else{S.missions=[...S.missions,{id:uid(),...n}];}
+    setState({modal:null});
+  }));
+  document.querySelectorAll('[data-deletemission]').forEach(el=>el.addEventListener('click',()=>{
+    const mid=el.dataset.deletemission;
+    setState({modal:{type:'confirm',message:'ต้องการลบภารกิจนี้?',_action:()=>{S.missions=S.missions.filter(m=>m.id!==mid);setState({modal:null});}}});
+  }));
+  // Team CRUD
+  document.querySelectorAll('[data-action="addTeam"]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'addTeam'}})));
+  document.querySelectorAll('[data-editteam]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'editTeam',teamId:el.dataset.editteam}})));
+  document.querySelectorAll('[data-deleteteam]').forEach(el=>el.addEventListener('click',()=>{
+    const tid=el.dataset.deleteteam;
+    setState({modal:{type:'confirm',message:'ต้องการลบทีมนี้?',_action:()=>{S.teams=S.teams.filter(t=>t.id!==tid);setState({modal:null});}}});
+  }));
+  // Team member search
+  const tfSearch=document.getElementById('tf-search');
+  const tfShowAll=document.getElementById('tf-show-all');
+
+  function applyTeamFilter(){
+    const q=(tfSearch?.value||'').toLowerCase();
+    const showAll=tfShowAll?.checked||false;
+    document.querySelectorAll('.tm-m-lbl').forEach(lbl=>{
+      const nameMatch=!q||lbl.dataset.name?.includes(q);
+      const inOther=lbl.dataset.inother==='1';
+      // Hide "in other team" unless show-all is checked
+      if(inOther&&!showAll){ lbl.style.display='none'; return; }
+      lbl.style.display=nameMatch?'flex':'none';
+    });
+  }
+
+  if(tfSearch) tfSearch.addEventListener('input', applyTeamFilter);
+  if(tfShowAll) tfShowAll.addEventListener('change', applyTeamFilter);
+  document.querySelectorAll('[data-saveteam]').forEach(el=>el.addEventListener('click',()=>{
+    const eid=el.dataset.saveteam;
+    const teamProp=_v('tf-prop')||(isSuper()?'CCH':S.currentUser.property);
+    if(!_v('tf-name')?.trim()){alert('กรุณากรอกชื่อทีม');return;}
+
+    // Collect checked system members
+    const checked=[...document.querySelectorAll('[id^="tm-m-"]')].filter(cb=>cb.checked).map(cb=>cb.id.replace('tm-m-',''));
+
+    // Collect external members (rows with .ext-m-name)
+    const extRows=[...document.querySelectorAll('.ext-m-row')];
+    const extMembers=extRows.map(row=>({
+      id:'ext_'+uid(),
+      name:(row.querySelector('.ext-m-name')?.value||'').trim(),
+      dept:(row.querySelector('.ext-m-dept')?.value||'').trim(),
+      isExternal:true
+    })).filter(em=>em.name);
+
+    const checkedUsers=S.users.filter(u=>checked.includes(u.id));
+    const n={
+      name:_v('tf-name')||'Team',
+      nameEn:_v('tf-name')||'Team',
+      property:teamProp,
+      memberIds:checked,
+      externalMembers:extMembers,
+      depts:[...new Set([...checkedUsers.map(u=>u.dept),...extMembers.map(em=>em.dept).filter(Boolean)])],
+    };
+
+    const totalMembers=checked.length+extMembers.length;
+    if(totalMembers===0&&!confirm('บันทึกทีมโดยไม่มีสมาชิก?')) return;
+
+    if(eid){
+      S.teams=S.teams.map(t=>t.id===eid?{...t,...n}:t);
+    } else {
+      const newId=uid();
+      S.teams=[...S.teams,{id:newId,...n,points:0,streak:0}];
+      checked.forEach(cid=>{S.users=S.users.map(u=>u.id===cid?{...u,teamId:newId}:u);});
+    }
+    if(eid) checked.forEach(cid=>{S.users=S.users.map(u=>u.id===cid?{...u,teamId:eid}:u);});
+    setState({modal:null});
+  }));
+  // Dept CRUD
+  document.querySelectorAll('[data-action="addDept"]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'addDept'}})));
+  document.querySelectorAll('[data-editdept]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'editDept',deptId:el.dataset.editdept}})));
+  document.querySelectorAll('[data-deletedept]').forEach(el=>el.addEventListener('click',()=>{
+    const did=el.dataset.deletedept;
+    const dept=S.departments.find(d=>d.id===did);
+    setState({modal:{type:'confirm',message:`ต้องการลบแผนก "${dept?.name}" (${dept?.property})?`,_action:()=>{
+      S.departments=S.departments.filter(d=>d.id!==did);
+      S.deptLogs=[{
+        id:uid(),action:'delete',deptId:did,
+        deptName:dept?.name||'?',property:dept?.property||'?',
+        by:S.currentUser.name,byId:S.currentUser.id,
+        at:new Date().toISOString(),
+      },...(S.deptLogs||[])].slice(0,200);
+      setState({modal:null});
+    }}});
+  }));
+  document.querySelectorAll('[data-savedept]').forEach(el=>el.addEventListener('click',()=>{
+    const eid=el.dataset.savedept;
+    const n={name:_v('df-name'),property:_v('df-prop')||(isSuper()?'CCH':S.currentUser.property)};
+    if(!n.name){alert('กรุณากรอกชื่อแผนก');return;}
+    if(eid){
+      const old=S.departments.find(d=>d.id===eid);
+      S.departments=S.departments.map(d=>d.id===eid?{...d,...n}:d);
+      S.deptLogs=[{
+        id:uid(),action:'edit',deptId:eid,
+        deptName:n.name,property:n.property,
+        oldName:old?.name,oldProperty:old?.property,
+        by:S.currentUser.name,byId:S.currentUser.id,
+        at:new Date().toISOString(),
+      },...(S.deptLogs||[])].slice(0,200);
+    } else {
+      const newId=uid();
+      S.departments=[...S.departments,{id:newId,...n}];
+      S.deptLogs=[{
+        id:uid(),action:'create',deptId:newId,
+        deptName:n.name,property:n.property,
+        by:S.currentUser.name,byId:S.currentUser.id,
+        at:new Date().toISOString(),
+      },...(S.deptLogs||[])].slice(0,200);
+    }
+    setState({modal:null});
+  }));
+  // Staff detail modal (leaderboard & dashboard top staff)
+  document.querySelectorAll('[data-staffdetail]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const userId=el.dataset.staffdetail;
+    if(userId) setState({modal:{type:'staffDetail',userId}},true);
+  }));
+  // Profile edit
+  document.querySelectorAll('[data-action="editProfile"]').forEach(el=>el.addEventListener('click',()=>setState({modal:{type:'editProfile'}})));
+  document.querySelectorAll('[data-action="saveProfile"]').forEach(el=>el.addEventListener('click',()=>{
+    const newName=_v('pf-name').trim()||S.currentUser.name;
+    const newDept=_v('pf-dept')||S.currentUser.dept;
+    const newPw=document.getElementById('pf-pw')?.value||'';
+    const newPw2=document.getElementById('pf-pw2')?.value||'';
+    if(newPw){
+      if(newPw.length<4){alert('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร');return;}
+      if(newPw!==newPw2){alert('รหัสผ่านไม่ตรงกัน กรุณากรอกอีกครั้ง');return;}
+    }
+    const nm={name:newName,dept:newDept,...(newPw?{password:newPw}:{})};
+    S.users=S.users.map(u=>u.id===S.currentUser.id?{...u,...nm}:u);
+    S.currentUser={...S.currentUser,...nm};
+    setState({modal:null});
+  }));
+  // Notifications
+  document.querySelectorAll('[data-action="markAllRead"]').forEach(el=>el.addEventListener('click',()=>{
+    S.notifications=S.notifications.map(n=>n.userId===S.currentUser.id?{...n,read:true}:n);
+    setState({});
+  }));
+  // Downloads
+  document.querySelectorAll('[data-action="downloadExcel"]').forEach(el=>el.addEventListener('click',exportExcel));
+  document.querySelectorAll('[data-action="downloadPhotos"]').forEach(el=>el.addEventListener('click',exportPhotosZip));
+  document.querySelectorAll('[data-action="downloadPDF"]').forEach(el=>el.addEventListener('click',exportPDF));
+  document.querySelectorAll('[data-action="downloadLeaderboardPDF"]').forEach(el=>el.addEventListener('click',exportLeaderboardPDF));
+  document.querySelectorAll('[data-action="dlStaffTemplate"]').forEach(el=>el.addEventListener('click',downloadStaffTemplate));
+  // Date range filter
+  const rptApply=document.getElementById('rpt-apply-date');
+  const rptClear=document.getElementById('rpt-clear-date');
+  if(rptApply) rptApply.addEventListener('click',()=>{
+    const f=document.getElementById('rpt-from')?.value||'';
+    const to=document.getElementById('rpt-to')?.value||'';
+    setState({reportDateFrom:f,reportDateTo:to},true);
+  });
+  if(rptClear) rptClear.addEventListener('click',()=>setState({reportDateFrom:'',reportDateTo:''},true));
+  // Registration
+  const regBtn=document.querySelector('[data-action="register"]');
+  if(regBtn) regBtn.addEventListener('click',doRegister);
+  ['regName','regUser','regPw','regPw2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+  });
+  const toReg=document.querySelector('[data-action="goRegister"]');
+  const toLogin=document.querySelector('[data-action="goLogin"]');
+  if(toReg) toReg.addEventListener('click',()=>setState({loginTab:'register'},true));
+  if(toLogin) toLogin.addEventListener('click',()=>setState({loginTab:'login'},true));
+  // Register form: show/hide team field based on radio
+  const regRadios=document.querySelectorAll('[name="regType"]');
+  const regTeamField=document.getElementById('regTeamField');
+  if(regRadios.length&&regTeamField){
+    regRadios.forEach(r=>r.addEventListener('change',()=>{
+      regTeamField.style.display=r.value==='team'&&r.checked?'block':'none';
+    }));
+  }
+  // Register form: filter team list by selected property
+  const regPropSel=document.getElementById('regProp');
+  const regTeamSel=document.getElementById('regTeam');
+  if(regPropSel&&regTeamSel){
+    regPropSel.addEventListener('change',()=>{
+      const p=regPropSel.value;
+      const filtered=S.teams.filter(t=>t.property===p);
+      regTeamSel.innerHTML='<option value="">— ยังไม่เลือกทีม —</option>'+
+        filtered.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    });
+  }
+  document.querySelectorAll('[data-action="importStaff"]').forEach(el=>el.addEventListener('click',()=>{
+    const fi=document.getElementById('importCsvInput');
+    if(fi){fi.value='';fi.click();}
+  }));
+  const importInput=document.getElementById('importCsvInput');
+  if(importInput) importInput.addEventListener('change',e=>{if(e.target.files[0])importStaffFromFile(e.target.files[0]);});
+  // Confirm action
+  const ca=document.querySelector('[data-action="confirmAction"]');
+  if(ca&&S.modal?._action) ca.addEventListener('click',S.modal._action);
+
+  // Export snapshot (for cross-device transfer)
+  document.querySelectorAll('[data-action="exportSnapshot"]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    FB.exportSnapshot();
+    alert('✅ ดาวน์โหลดข้อมูลแล้ว!\n\nนำไฟล์ .json ไปเปิดในอุปกรณ์อื่น แล้วกด "นำเข้าข้อมูล"\n(ทำงานบน Netlify เท่ากัน คนละเครื่อง)');
+  }));
+
+  // Import snapshot (from another device)
+  const importSnap=document.getElementById('importSnapshotFile');
+  if(importSnap) importSnap.addEventListener('change',async e=>{
+    if(!e.target.files[0]) return;
+    const ok=confirm('นำเข้าข้อมูลจากไฟล์นี้?\n⚠️ ข้อมูลปัจจุบันจะถูกแทนที่');
+    if(!ok) return;
+    try{
+      await FB.importSnapshot(e.target.files[0]);
+      alert('✅ นำเข้าข้อมูลสำเร็จ! กำลังโหลดใหม่...');
+      setTimeout(()=>location.reload(),800);
+    }catch(err){
+      alert('❌ นำเข้าไม่ได้: '+err.message);
+    }
+  });
+  // Modal close
+  const mOverlay=document.getElementById('modalOverlay');
+  if(mOverlay) mOverlay.addEventListener('click',e=>{if(e.target===mOverlay&&Date.now()-S._modalOpenTime>800)setState({modal:null});});
+  document.querySelectorAll('[data-closemodal]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();setState({modal:null});}));
+}
+
+function _v(id){return document.getElementById(id)?.value||'';}
+
+/* ══════════════════════════════════════════════════════════
+   BUSINESS LOGIC
+══════════════════════════════════════════════════════════ */
+function doLogin(){
+  const username=document.getElementById('loginUser')?.value?.trim()||'';
+  const pw=document.getElementById('loginPw')?.value||'';
+  const u=S.users.find(x=>x.username===username&&x.password===pw);
+  if(u){
+    if(!u.active){alert('บัญชีนี้ถูกปิดการใช้งาน');return;}
+    S.currentUser=u;
+    setState({page:'dashboard',sideOpen:false,prevPages:[],loginTab:'login'},true);
+  } else {
+    alert(S.lang==='th'?'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง':'Invalid credentials');
+  }
+}
+
+function doRegister(){
+  const name=(document.getElementById('regName')?.value||'').trim();
+  const username=(document.getElementById('regUser')?.value||'').trim().toLowerCase();
+  const pw=document.getElementById('regPw')?.value||'';
+  const pw2=document.getElementById('regPw2')?.value||'';
+  const property=document.getElementById('regProp')?.value||'CCH';
+  const dept=document.getElementById('regDept')?.value||'Back of House';
+  const typeVal=document.querySelector('[name="regType"]:checked')?.value||'individual';
+  const teamId=typeVal==='team'?(document.getElementById('regTeam')?.value||null):null;
+
+  if(!name){alert('กรุณากรอกชื่อ-นามสกุล');return;}
+  if(!username||username.length<3){alert('ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร');return;}
+  if(!/^[a-z0-9._]+$/.test(username)){alert('ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษรเล็ก ตัวเลข จุด และขีดล่าง');return;}
+  if(S.users.find(u=>u.username===username)){alert('ชื่อผู้ใช้นี้มีคนใช้แล้ว กรุณาเลือกใหม่');return;}
+  if(pw.length<4){alert('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร');return;}
+  if(pw!==pw2){alert('รหัสผ่านไม่ตรงกัน กรุณากรอกอีกครั้ง');return;}
+
+  const newUser={
+    id:uid(), name, username, password:pw,
+    property, dept, role:'staff',
+    points:0, badges:[], streak:0, active:true,
+    teamId: teamId||null,
+  };
+  S.users=[...S.users, newUser];
+
+  // If joining a team, add memberIds
+  if(teamId){
+    S.teams=S.teams.map(t=>t.id===teamId?{...t, memberIds:[...(t.memberIds||[]), newUser.id]}:t);
+  }
+
+  // Notify admins
+  S.users.filter(u=>u.role==='admin1'||(u.role==='admin2'&&u.property===property)).forEach(admin=>{
+    S.notifications=[...S.notifications,{
+      id:uid(), userId:admin.id,
+      msg:`👋 ${name} ลงทะเบียนใหม่ (${property} • ${dept})`,
+      msgEn:`👋 ${name} registered (${property} • ${dept})`,
+      read:false, time:new Date().toISOString().split('T')[0]
+    }];
+  });
+
+  S.currentUser=newUser;
+  alert(`✅ ลงทะเบียนสำเร็จ!\nยินดีต้อนรับ ${name} 🌿`);
+  setState({page:'dashboard', sideOpen:false, prevPages:[], loginTab:'login'}, false);
+}
+
+function approveSub(subId){
+  const sub=S.submissions.find(s=>s.id===subId);
+  if(!sub) return;
+  const m=S.missions.find(x=>x.id===sub.missionId);
+  S.submissions=S.submissions.map(s=>s.id===subId?{...s,status:'approved',adminNote:'Approved ✅'}:s);
+  if(m){
+    if(sub.userId) S.users=S.users.map(u=>u.id===sub.userId?{...u,points:u.points+(m.points||0),streak:u.streak+1}:u);
+    if(sub.teamId) S.teams=S.teams.map(t=>t.id===sub.teamId?{...t,points:t.points+(m.points||0)}:t);
+  }
+  if(S.currentUser&&sub.userId===S.currentUser.id) S.currentUser={...S.currentUser,points:S.currentUser.points+(m?.points||0)};
+  const tid=sub.userId||(sub.teamId?S.users.find(u=>u.teamId===sub.teamId&&u.role==='staff')?.id:null);
+  if(tid) S.notifications=[...S.notifications,{id:uid(),userId:tid,msg:`ภารกิจ "${m?.title}" ผ่าน! +${m?.points} pts 🎉`,msgEn:`Mission "${m?.titleEn}" approved! +${m?.points} pts 🎉`,read:false,time:new Date().toISOString().split('T')[0]}];
+  // Immediate save — points change must not be lost
+  schedSave(true);
+  render();
+}
+
+function rejectSub(subId){
+  const sub=S.submissions.find(s=>s.id===subId);
+  if(!sub) return;
+  S.submissions=S.submissions.map(s=>s.id===subId?{...s,status:'rejected',adminNote:'หลักฐานไม่ชัดเจน กรุณาส่งใหม่'}:s);
+  if(sub.userId) S.notifications=[...S.notifications,{id:uid(),userId:sub.userId,msg:'ภารกิจถูกปฏิเสธ กรุณาส่งใหม่ 📷',msgEn:'Mission rejected. Please resubmit.',read:false,time:new Date().toISOString().split('T')[0]}];
+  schedSave(true);
+  render();
+}
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
+(async()=>{
+  // Init Firebase (or fallback to localStorage)
+  await FB.init();
+  await loadPersistedData();
+  // Auto-save every 30s (non-blocking) — catches any missed changes
+  setInterval(async()=>{if(S.currentUser&&!_pendingSave) await persistAll();},30000);
+  render();
+})();
+</script>
+</body>
+</html>
